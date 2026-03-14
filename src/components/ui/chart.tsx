@@ -6,6 +6,24 @@ import { cn } from "@/lib/utils";
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
 
+function sanitizeCssIdentifier(value: string) {
+  return value.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
+function sanitizeCssValue(value: string) {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (!/^[a-zA-Z0-9#(),.%_\-/ \t]+$/.test(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
+
 export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode;
@@ -37,7 +55,8 @@ const ChartContainer = React.forwardRef<
   }
 >(({ id, className, children, config, ...props }, ref) => {
   const uniqueId = React.useId();
-  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+  const rawChartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+  const chartId = sanitizeCssIdentifier(rawChartId) || "chart-default";
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -59,29 +78,43 @@ const ChartContainer = React.forwardRef<
 ChartContainer.displayName = "Chart";
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
+  const safeChartId = sanitizeCssIdentifier(id);
+  const colorConfig = Object.entries(config).filter(([_, itemConfig]) => itemConfig.theme || itemConfig.color);
 
-  if (!colorConfig.length) {
+  if (!safeChartId || !colorConfig.length) {
+    return null;
+  }
+
+  const css = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const declarations = colorConfig
+        .map(([key, itemConfig]) => {
+          const safeKey = sanitizeCssIdentifier(key);
+          const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+          const safeColor = typeof color === "string" ? sanitizeCssValue(color) : null;
+
+          return safeKey && safeColor ? `  --color-${safeKey}: ${safeColor};` : null;
+        })
+        .filter((declaration): declaration is string => declaration !== null)
+        .join("\n");
+
+      if (!declarations) {
+        return null;
+      }
+
+      return `${prefix} [data-chart="${safeChartId}"] {\n${declarations}\n}`;
+    })
+    .filter((block): block is string => block !== null)
+    .join("\n");
+
+  if (!css) {
     return null;
   }
 
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join("\n")}
-}
-`,
-          )
-          .join("\n"),
+        __html: css,
       }}
     />
   );

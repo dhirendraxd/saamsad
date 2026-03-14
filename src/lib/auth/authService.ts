@@ -8,6 +8,7 @@ import {
 } from "@/lib/api/contracts";
 
 export const SESSION_STORAGE_KEY = "civicledger.auth.session";
+const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
@@ -72,6 +73,15 @@ function createSessionToken() {
   return createSecureId();
 }
 
+function hasSessionExpired(session: AuthSession) {
+  const expiresAt = Date.parse(session.expiresAt);
+  if (!Number.isFinite(expiresAt)) {
+    return true;
+  }
+
+  return Date.now() >= expiresAt;
+}
+
 function persistSession(session: AuthSession) {
   const storage = getStorage();
   if (!storage) {
@@ -93,7 +103,14 @@ export function getSession(): AuthSession | null {
   }
 
   try {
-    return authSessionSchema.parse(JSON.parse(raw));
+    const session = authSessionSchema.parse(JSON.parse(raw));
+
+    if (hasSessionExpired(session)) {
+      storage.removeItem(SESSION_STORAGE_KEY);
+      return null;
+    }
+
+    return session;
   } catch {
     storage.removeItem(SESSION_STORAGE_KEY);
     return null;
@@ -103,6 +120,8 @@ export function getSession(): AuthSession | null {
 export async function registerIdentity(input: IdentityRegistrationInput): Promise<AuthSession> {
   const normalizedInput = identityRegistrationInputSchema.parse(input);
   const roleResult = inferRole(normalizedInput);
+  const createdAt = new Date();
+  const expiresAt = new Date(createdAt.getTime() + SESSION_DURATION_MS);
 
   const session = authSessionSchema.parse({
     userId: roleResult.politicianId ?? createSecureId("citizen"),
@@ -112,7 +131,8 @@ export async function registerIdentity(input: IdentityRegistrationInput): Promis
     ward: normalizedInput.ward,
     municipality: normalizedInput.municipality,
     verified: roleResult.verified,
-    createdAt: new Date().toISOString(),
+    createdAt: createdAt.toISOString(),
+    expiresAt: expiresAt.toISOString(),
   });
 
   persistSession(session);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/lib/auth/useAuth";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -13,6 +14,10 @@ const navLinks = [
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  const authHref = isAuthenticated ? "/account" : "/auth";
+  const authLabel = isAuthenticated ? "Account" : "Join";
 
   return (
     <header className="bg-background">
@@ -36,11 +41,8 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/account">Sign in</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/account">Get Verified</Link>
+          <Button variant="civic" size="sm" asChild>
+            <Link to={authHref}>{authLabel}</Link>
           </Button>
         </div>
 
@@ -67,11 +69,8 @@ const Navbar = () => {
             </Link>
           ))}
           <div className="flex gap-3 pt-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/account" onClick={() => setOpen(false)}>Sign in</Link>
-            </Button>
             <Button variant="civic" size="sm" asChild>
-              <Link to="/account" onClick={() => setOpen(false)}>Get Verified</Link>
+              <Link to={authHref} onClick={() => setOpen(false)}>{authLabel}</Link>
             </Button>
           </div>
         </div>

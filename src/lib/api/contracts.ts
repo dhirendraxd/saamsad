@@ -3,23 +3,35 @@ import { z } from "zod";
 export const userRoleSchema = z.enum(["citizen", "politician"]);
 export type UserRole = z.infer<typeof userRoleSchema>;
 
+const nationalIdSchema = z
+  .string()
+  .trim()
+  .min(4)
+  .max(32)
+  .regex(/^[A-Za-z0-9-]+$/, "National ID must contain only letters, numbers, or hyphens.");
+
+const nameSchema = z.string().trim().min(2).max(80);
+const locationSchema = z.string().trim().min(1).max(80);
+const isoTimestampSchema = z.string().datetime({ offset: true });
+
 export const identityRegistrationInputSchema = z.object({
-  nationalId: z.string().min(4),
-  name: z.string().min(2),
-  ward: z.string().min(1),
-  municipality: z.string().min(1),
+  nationalId: nationalIdSchema,
+  name: nameSchema,
+  ward: locationSchema,
+  municipality: locationSchema,
 });
 export type IdentityRegistrationInput = z.infer<typeof identityRegistrationInputSchema>;
 
 export const authSessionSchema = z.object({
-  userId: z.string(),
-  token: z.string(),
+  userId: z.string().trim().min(2).max(128),
+  token: z.string().trim().min(16).max(256),
   role: userRoleSchema,
-  name: z.string(),
-  ward: z.string(),
-  municipality: z.string(),
+  name: nameSchema,
+  ward: locationSchema,
+  municipality: locationSchema,
   verified: z.boolean(),
-  createdAt: z.string(),
+  createdAt: isoTimestampSchema,
+  expiresAt: isoTimestampSchema,
 });
 export type AuthSession = z.infer<typeof authSessionSchema>;
 
@@ -74,7 +86,7 @@ export const projectSchema = z.object({
   startDate: z.string(),
   expectedCompletion: z.string(),
   status: projectStatusSchema,
-  progress: z.number(),
+  progress: z.number().min(0).max(100),
   category: z.string(),
   evidenceCount: z.number(),
   commentCount: z.number(),

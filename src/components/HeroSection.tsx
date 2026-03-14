@@ -28,7 +28,7 @@ const HeroSection = () => {
 
           {/* Right — illustration */}
           <div className="relative z-0 flex justify-center md:justify-end md:-mr-14 lg:-mr-28 xl:-mr-36">
-            <div className="relative w-full max-w-[30rem] sm:max-w-[39rem] md:max-w-[58rem] md:-translate-y-2 lg:max-w-[72rem] lg:-translate-y-5 xl:max-w-[78rem]">
+            <div className="relative w-full max-w-[30rem] sm:max-w-[40rem] md:max-w-[61rem] md:-translate-y-2 lg:max-w-[75rem] lg:-translate-y-5 xl:max-w-[82rem]">
               <img
                 src={heroPrimary}
                 alt="Civic participation illustration"
