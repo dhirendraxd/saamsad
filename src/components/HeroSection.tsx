@@ -1,63 +1,40 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-civic.jpg";
+import { Link } from "react-router-dom";
+import heroPrimary from "@/assets/hero-illustration-primary.png";
 
 const HeroSection = () => {
   return (
     <section className="relative overflow-hidden bg-background">
-      <div className="container py-16 md:py-24">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="container py-20 md:py-28 lg:py-32">
+        <div className="grid items-center gap-10 md:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] md:gap-12 lg:gap-10 xl:gap-16">
           {/* Left */}
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold leading-[1.1] tracking-tight text-foreground">
-              Hold Power{" "}
-              <span className="text-accent">Accountable,</span>{" "}
-              Build Trust Together
+          <div className="space-y-5 md:max-w-xl lg:pr-4">
+            <h1 className="max-w-[12ch] text-[clamp(2.9rem,7vw,4.25rem)] font-bold leading-[0.98] tracking-tight text-foreground">
+              <span className="block whitespace-nowrap">Track Promises.</span>
+              <span className="block whitespace-nowrap">Verify Progress.</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-lg">
-              A community-moderated platform where politicians publish promises
-              and citizens verify progress — creating a transparent public ledger
-              of governance performance.
+            <p className="max-w-md text-base text-muted-foreground md:text-lg">
+              CivicLedger turns public promises into trackable projects with updates, evidence, and citizen review.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
-              <Button variant="civic" size="lg">
-                Get Started
+              <Button variant="civic" size="lg" className="rounded-none" asChild>
+                <Link to="/explore">Explore</Link>
               </Button>
-              <Button variant="civic-outline" size="lg">
-                Explore Projects
+              <Button variant="outline" size="lg" className="rounded-none" asChild>
+                <Link to="/regions">Regions</Link>
               </Button>
             </div>
           </div>
 
-          {/* Right — image + floating stats */}
-          <div className="relative">
-            <div className="rounded-2xl overflow-hidden shadow-card-lg">
+          {/* Right — illustration */}
+          <div className="relative flex justify-center md:justify-end md:-mr-6 lg:-mr-10 xl:-mr-12">
+            <div className="relative w-full max-w-[30rem] sm:max-w-[34rem] md:max-w-[42rem] md:-translate-y-2 lg:max-w-[50rem] lg:-translate-y-4 xl:max-w-[54rem]">
               <img
-                src={heroImage}
-                alt="Citizens engaging in civic governance discussion"
-                className="w-full h-auto object-cover aspect-square"
+                src={heroPrimary}
+                alt="Civic participation illustration"
+                className="block w-full h-auto object-contain"
                 loading="eager"
               />
-            </div>
-
-            {/* Floating badge top-right */}
-            <div className="absolute -top-3 -right-3 md:top-4 md:-right-6 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs font-semibold shadow-lg animate-fade-up">
-              Track every promise
-            </div>
-
-            {/* Floating stat card */}
-            <div className="absolute bottom-6 -left-4 md:-left-8 bg-card rounded-xl p-4 shadow-card-lg animate-fade-up" style={{ animationDelay: "0.2s" }}>
-              <p className="text-2xl font-extrabold text-civic-green">85%</p>
-              <p className="text-xs text-muted-foreground">of promises tracked</p>
-            </div>
-
-            {/* Floating badges bottom */}
-            <div className="absolute bottom-24 left-6 md:left-2 space-y-2 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-              <div className="bg-card rounded-lg px-3 py-1.5 shadow-card text-xs font-medium">
-                Join <span className="text-accent font-bold">1,000+</span> citizens
-              </div>
-              <div className="bg-card rounded-lg px-3 py-1.5 shadow-card text-xs font-medium">
-                <span className="text-accent font-bold">500+</span> projects monitored
-              </div>
             </div>
           </div>
         </div>

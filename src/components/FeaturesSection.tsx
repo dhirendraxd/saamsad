@@ -1,35 +1,19 @@
-import { Shield, Users, FileCheck, GraduationCap, MapPin, BarChart3 } from "lucide-react";
-
 const features = [
   {
-    icon: Shield,
     title: "Promise Tracking",
-    description: "Every manifesto promise becomes a trackable project with status updates, evidence, and community verification.",
+    description: "Turn manifestos into public projects with visible progress.",
   },
   {
-    icon: Users,
-    title: "Community Moderation",
-    description: "No central moderators — citizens collectively verify project progress through confirmations and evidence uploads.",
+    title: "Citizen Verification",
+    description: "Residents confirm status updates with evidence from the ground.",
   },
   {
-    icon: FileCheck,
-    title: "Transparency Documents",
-    description: "Politicians earn trust by sharing expenditure reports, asset declarations, and governance documents.",
+    title: "Transparency Records",
+    description: "Disclosures and reports stay visible in one public timeline.",
   },
   {
-    icon: GraduationCap,
-    title: "Civic Education Hub",
-    description: "Learn how government works, understand citizen rights, and explore political ideologies from multiple perspectives.",
-  },
-  {
-    icon: MapPin,
-    title: "Ward-Based Engagement",
-    description: "Citizens interact within their own ward while freely exploring projects and politicians across the entire country.",
-  },
-  {
-    icon: BarChart3,
-    title: "Reputation Scores",
-    description: "Public accountability scores built from completed promises, citizen trust ratings, and engagement metrics.",
+    title: "Civic Education",
+    description: "Simple learning paths explain institutions, rights, and process.",
   },
 ];
 
@@ -37,24 +21,23 @@ const FeaturesSection = () => {
   return (
     <section className="bg-background" id="projects">
       <div className="container py-16 md:py-24">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Platform Features</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground">
-            Everything You Need for Civic Oversight
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-civic-slate">Platform Features</p>
+          <h2 className="text-3xl font-extrabold text-foreground md:text-4xl">
+            Built for Clear Public Oversight
           </h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature) => (
+        <div className="grid gap-5 sm:grid-cols-2">
+          {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group bg-card rounded-2xl p-6 shadow-card hover:shadow-card-lg transition-shadow border border-transparent hover:border-accent/20"
+              className="rounded-none border border-border bg-card p-6 shadow-card transition-colors hover:bg-muted/35"
             >
-              <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
-                <feature.icon className="w-5 h-5 text-accent" />
-              </div>
-              <h3 className="font-bold text-lg text-foreground mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+              <p className="mb-3 text-xs font-semibold tracking-[0.18em] text-civic-slate">0{index + 1}</p>
+              <h3 className="mb-2 text-lg font-bold text-foreground">{feature.title}</h3>
+              <div className="my-3 h-px w-full bg-border" />
+              <p className="text-sm leading-relaxed text-civic-slate">{feature.description}</p>
             </div>
           ))}
         </div>

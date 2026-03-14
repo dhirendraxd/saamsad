@@ -1,21 +1,22 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const CtaSection = () => {
   return (
     <section className="bg-background" id="education">
       <div className="container py-16 md:py-24">
-        <div className="bg-muted rounded-3xl p-10 md:p-16 text-center max-w-3xl mx-auto">
-          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-3">Civic Education</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-            Learn How Governance Works
+        <div className="mx-auto max-w-2xl rounded-none border border-border bg-muted/60 p-10 text-center md:p-14">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-civic-slate">Civic Education</p>
+          <h2 className="mb-4 text-3xl font-extrabold text-foreground md:text-4xl">
+            Learn Governance Basics
           </h2>
-          <p className="text-muted-foreground max-w-lg mx-auto mb-8">
-            Access learning paths on government structures, citizen rights,
-            election systems, and local development — all in one place.
+          <p className="mx-auto mb-8 max-w-lg text-muted-foreground">
+            Short practical guides on institutions, rights, and public accountability.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="civic" size="lg">Start Learning</Button>
-            <Button variant="civic-outline" size="lg">Browse Topics</Button>
+            <Button variant="civic" size="lg" className="rounded-none" asChild>
+              <Link to="/education">Start Learning</Link>
+            </Button>
           </div>
         </div>
       </div>

@@ -15,9 +15,9 @@ const Navbar = () => {
   const location = useLocation();
 
   return (
-    <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b">
+    <header className="bg-background">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="font-display text-xl font-bold tracking-tight text-primary">
+        <Link to="/" className="font-display text-xl font-semibold tracking-tight text-foreground">
           CivicLedger
         </Link>
 
@@ -27,7 +27,7 @@ const Navbar = () => {
               key={link.label}
               to={link.href}
               className={`text-sm font-medium transition-colors ${
-                location.pathname === link.href ? "text-accent" : "text-muted-foreground hover:text-foreground"
+                location.pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-civic-green"
               }`}
             >
               {link.label}
@@ -39,8 +39,8 @@ const Navbar = () => {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/account">Sign in</Link>
           </Button>
-          <Button variant="civic" size="sm" asChild>
-            <Link to="/account">Sign up</Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/account">Get Verified</Link>
           </Button>
         </div>
 
@@ -59,7 +59,7 @@ const Navbar = () => {
               key={link.label}
               to={link.href}
               className={`block text-sm font-medium ${
-                location.pathname === link.href ? "text-accent" : "text-muted-foreground hover:text-foreground"
+                location.pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-civic-green"
               }`}
               onClick={() => setOpen(false)}
             >
@@ -71,7 +71,7 @@ const Navbar = () => {
               <Link to="/account" onClick={() => setOpen(false)}>Sign in</Link>
             </Button>
             <Button variant="civic" size="sm" asChild>
-              <Link to="/account" onClick={() => setOpen(false)}>Sign up</Link>
+              <Link to="/account" onClick={() => setOpen(false)}>Get Verified</Link>
             </Button>
           </div>
         </div>

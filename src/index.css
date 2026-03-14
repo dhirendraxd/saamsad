@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 0 0% 100%;
     --foreground: 220 20% 14%;
 
     --card: 0 0% 100%;
@@ -24,7 +24,7 @@
     --muted: 210 20% 96%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 24 90% 52%;
+    --accent: 220 65% 28%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -38,7 +38,7 @@
 
     --civic-green: 152 55% 42%;
     --civic-green-foreground: 0 0% 100%;
-    --civic-amber: 38 92% 50%;
+    --civic-amber: 28 78% 38%;
     --civic-amber-foreground: 0 0% 100%;
     --civic-navy: 220 65% 18%;
     --civic-slate: 220 14% 36%;
@@ -69,7 +69,7 @@
     --secondary-foreground: 210 40% 96%;
     --muted: 220 20% 16%;
     --muted-foreground: 215 20% 65%;
-    --accent: 24 85% 55%;
+    --accent: 210 60% 55%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 210 40% 98%;
@@ -98,5 +98,19 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+  }
+}
+
+@layer components {
+  .homepage-vibe {
+    font-family: "Manrope", "Plus Jakarta Sans", system-ui, sans-serif;
+  }
+
+  .homepage-vibe h1,
+  .homepage-vibe h2,
+  .homepage-vibe h3 {
+    font-family: "Sora", "Manrope", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.015em;
   }
 }

@@ -1,5 +1,6 @@
+import { type KeyboardEvent } from "react";
 import { User, Award, MapPin } from "lucide-react";
-import { type Politician, getScoreColor } from "@/data/mockData";
+import type { Politician } from "@/lib/api/contracts";
 
 interface PoliticianCardProps {
   politician: Politician;
@@ -7,10 +8,24 @@ interface PoliticianCardProps {
 }
 
 const PoliticianCard = ({ politician, onClick }: PoliticianCardProps) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <div
       onClick={onClick}
-      className="bg-card rounded-2xl p-5 shadow-card hover:shadow-card-lg transition-all cursor-pointer border border-transparent hover:border-accent/20 group"
+      onKeyDown={handleKeyDown}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      className={`rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-primary/15 hover:shadow-card-lg ${onClick ? "cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/15" : ""}`}
     >
       <div className="flex items-start gap-4">
         <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -35,7 +50,7 @@ const PoliticianCard = ({ politician, onClick }: PoliticianCardProps) => {
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="bg-muted rounded-lg p-2.5 text-center">
-          <p className={`text-lg font-extrabold ${getScoreColor(politician.accountabilityScore)}`}>
+          <p className="text-lg font-extrabold text-civic-amber">
             {politician.accountabilityScore}%
           </p>
           <p className="text-[10px] text-muted-foreground">Accountability</p>
@@ -51,7 +66,7 @@ const PoliticianCard = ({ politician, onClick }: PoliticianCardProps) => {
       {politician.badges.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {politician.badges.map((badge) => (
-            <span key={badge} className="inline-flex items-center gap-1 text-[10px] font-medium bg-accent/10 text-accent px-2 py-0.5 rounded-full">
+            <span key={badge} className="inline-flex items-center gap-1 rounded-none border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground">
               <Award className="w-2.5 h-2.5" />
               {badge}
             </span>

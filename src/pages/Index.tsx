@@ -3,23 +3,23 @@ import HeroSection from "@/components/HeroSection";
 import StatsSection from "@/components/StatsSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
-import CtaSection from "@/components/CtaSection";
-import Footer from "@/components/Footer";
 import FeaturedPoliticians from "@/components/FeaturedPoliticians";
 import RecentProjects from "@/components/RecentProjects";
+import CtaSection from "@/components/CtaSection";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <HeroSection />
-      <StatsSection />
-      <FeaturedPoliticians />
-      <RecentProjects />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <CtaSection />
-      <Footer />
+      <main className="homepage-vibe">
+        <HeroSection />
+        <StatsSection />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <FeaturedPoliticians />
+        <RecentProjects />
+        <CtaSection />
+      </main>
     </div>
   );
 };

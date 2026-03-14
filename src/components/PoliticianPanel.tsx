@@ -1,15 +1,16 @@
 import { X, User, Award, MapPin, FileText, BarChart3, MessageSquare } from "lucide-react";
-import { type Politician, mockProjects } from "@/data/mockData";
+import type { Politician, Project } from "@/lib/api/contracts";
 import ScoreDashboard from "@/components/ScoreDashboard";
 import ProjectCard from "@/components/ProjectCard";
 
 interface PoliticianPanelProps {
   politician: Politician;
+  projects?: Project[];
   onClose: () => void;
 }
 
-const PoliticianPanel = ({ politician, onClose }: PoliticianPanelProps) => {
-  const projects = mockProjects.filter((p) => p.politicianId === politician.id);
+const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps) => {
+  const politicianProjects = (projects ?? []).filter((project) => project.politicianId === politician.id);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -49,7 +50,7 @@ const PoliticianPanel = ({ politician, onClose }: PoliticianPanelProps) => {
           {politician.badges.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {politician.badges.map((badge) => (
-                <span key={badge} className="inline-flex items-center gap-1.5 text-xs font-medium bg-accent/10 text-accent px-3 py-1.5 rounded-full">
+                <span key={badge} className="inline-flex items-center gap-1.5 rounded-none border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground">
                   <Award className="w-3 h-3" />
                   {badge}
                 </span>
@@ -98,13 +99,19 @@ const PoliticianPanel = ({ politician, onClose }: PoliticianPanelProps) => {
           {/* Projects */}
           <div>
             <h4 className="font-bold text-foreground mb-3 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" /> Projects ({projects.length})
+              <MessageSquare className="w-4 h-4" /> Projects ({politicianProjects.length})
             </h4>
-            <div className="space-y-3">
-              {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
+            {politicianProjects.length > 0 ? (
+              <div className="space-y-3">
+                {politicianProjects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground shadow-card">
+                No projects are available for this profile yet.
+              </div>
+            )}
           </div>
         </div>
       </div>

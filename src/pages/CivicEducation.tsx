@@ -1,17 +1,18 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { mockEducationTopics } from "@/data/mockData";
 import { BookOpen, Clock } from "lucide-react";
+import { useEducationTopicsQuery } from "@/hooks/queries/useCivicQueries";
 
 const categories = ["All", "Democracy Basics", "Local Government", "Elections", "Public Budgeting", "Citizen Rights"];
 
 const CivicEducation = () => {
   const [activeCategory, setActiveCategory] = useState("All");
+  const { data: educationTopics = [], isLoading } = useEducationTopicsQuery();
 
   const filtered = activeCategory === "All"
-    ? mockEducationTopics
-    : mockEducationTopics.filter((t) => t.category === activeCategory);
+    ? educationTopics
+    : educationTopics.filter((topic) => topic.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,23 +46,27 @@ const CivicEducation = () => {
         </div>
 
         {/* Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((topic) => (
-            <div
-              key={topic.id}
-              className="bg-card rounded-2xl p-6 shadow-card hover:shadow-card-lg transition-all cursor-pointer border border-transparent hover:border-accent/20 group"
-            >
-              <span className="text-3xl mb-4 block">{topic.icon}</span>
-              <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">{topic.category}</span>
-              <h3 className="font-bold text-lg text-foreground mt-1 mb-2 group-hover:text-accent transition-colors">{topic.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">{topic.description}</p>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{topic.readTime}</span>
-                <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" />Article</span>
+        {isLoading ? (
+          <div className="bg-card rounded-xl border p-6 text-sm text-muted-foreground">Loading civic education topics...</div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((topic) => (
+              <div
+                key={topic.id}
+                className="bg-card rounded-2xl p-6 shadow-card hover:shadow-card-lg transition-all cursor-pointer border border-transparent hover:border-accent/20 group"
+              >
+                <span className="text-3xl mb-4 block">{topic.icon}</span>
+                <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">{topic.category}</span>
+                <h3 className="font-bold text-lg text-foreground mt-1 mb-2 group-hover:text-accent transition-colors">{topic.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{topic.description}</p>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{topic.readTime}</span>
+                  <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" />Article</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
       <Footer />
     </div>

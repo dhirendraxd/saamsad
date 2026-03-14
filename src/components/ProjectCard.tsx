@@ -1,3 +1,4 @@
+import { type KeyboardEvent } from "react";
 import { MapPin, MessageSquare, Image } from "lucide-react";
 import { type Project, getStatusColor, getStatusLabel } from "@/data/mockData";
 import { useNavigate } from "react-router-dom";
@@ -9,17 +10,38 @@ interface ProjectCardProps {
 const ProjectCard = ({ project }: ProjectCardProps) => {
   const navigate = useNavigate();
 
+  const handleOpen = () => {
+    navigate(`/project/${project.id}`);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleOpen();
+    }
+  };
+
+  const progressBarColor =
+    project.status === "completed"
+      ? "bg-civic-green"
+      : project.status === "delayed"
+        ? "bg-civic-amber"
+        : "bg-primary";
+
   return (
     <div
-      onClick={() => navigate(`/project/${project.id}`)}
-      className="bg-card rounded-2xl p-5 shadow-card hover:shadow-card-lg transition-all cursor-pointer border border-transparent hover:border-accent/20"
+      onClick={handleOpen}
+      onKeyDown={handleKeyDown}
+      role="link"
+      tabIndex={0}
+      className="cursor-pointer rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-primary/15 hover:shadow-card-lg focus:outline-none focus:ring-2 focus:ring-primary/15"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-foreground truncate">{project.title}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">{project.politicianName}</p>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold flex-shrink-0 ${getStatusColor(project.status)}`}>
+        <span className={`flex-shrink-0 rounded-none px-2.5 py-1 text-[10px] font-semibold ${getStatusColor(project.status)}`}>
           {getStatusLabel(project.status)}
         </span>
       </div>
@@ -33,11 +55,11 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
       <div className="mt-4">
         <div className="flex justify-between text-xs mb-1.5">
           <span className="text-muted-foreground">Progress</span>
-          <span className="font-semibold text-foreground">{project.progress}%</span>
+          <span className="font-semibold text-civic-amber">{project.progress}%</span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-accent rounded-full transition-all duration-500"
+            className={`h-full rounded-full transition-all duration-500 ${progressBarColor}`}
             style={{ width: `${project.progress}%` }}
           />
         </div>

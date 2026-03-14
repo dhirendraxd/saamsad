@@ -59,6 +59,7 @@ export interface Project {
 
 export interface Comment {
   id: string;
+  projectId: string;
   author: string;
   ward: string;
   date: string;
@@ -380,11 +381,11 @@ export const mockProjects: Project[] = [
 ];
 
 export const mockComments: Comment[] = [
-  { id: "c1", author: "Sarah K.", ward: "Ward 5", date: "2026-03-10", content: "I drove past the health center today — the walls are up and they're working on the roof. Looks promising!", hasEvidence: true },
-  { id: "c2", author: "Michael O.", ward: "Ward 5", date: "2026-03-08", content: "When will the center start accepting patients? My family really needs this.", hasEvidence: false },
-  { id: "c3", author: "Esther N.", ward: "Ward 5", date: "2026-03-05", content: "Uploaded photos from yesterday. Progress is visible but slower than expected.", hasEvidence: true },
-  { id: "c4", author: "John D.", ward: "Ward 3", date: "2026-03-09", content: "The road work stopped again near kilometer 5. No workers on site for a week.", hasEvidence: true },
-  { id: "c5", author: "Grace M.", ward: "Ward 1", date: "2025-12-22", content: "Our school finally has reliable power! The children are so excited about the computer lab.", hasEvidence: true },
+  { id: "c1", projectId: "proj1", author: "Sarah K.", ward: "Ward 5", date: "2026-03-10", content: "I drove past the health center today - the walls are up and they're working on the roof. Looks promising!", hasEvidence: true },
+  { id: "c2", projectId: "proj1", author: "Michael O.", ward: "Ward 5", date: "2026-03-08", content: "When will the center start accepting patients? My family really needs this.", hasEvidence: false },
+  { id: "c3", projectId: "proj1", author: "Esther N.", ward: "Ward 5", date: "2026-03-05", content: "Uploaded photos from yesterday. Progress is visible but slower than expected.", hasEvidence: true },
+  { id: "c4", projectId: "proj2", author: "John D.", ward: "Ward 3", date: "2026-03-09", content: "The road work stopped again near kilometer 5. No workers on site for a week.", hasEvidence: true },
+  { id: "c5", projectId: "proj3", author: "Grace M.", ward: "Ward 1", date: "2025-12-22", content: "Our school finally has reliable power! The children are so excited about the computer lab.", hasEvidence: true },
 ];
 
 export const mockEducationTopics: EducationTopic[] = [

@@ -4,9 +4,13 @@ import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
 import PoliticianCard from "@/components/PoliticianCard";
 import PoliticianPanel from "@/components/PoliticianPanel";
-import { mockRegions, mockPoliticians, mockProjects } from "@/data/mockData";
-import type { Politician } from "@/data/mockData";
+import type { Politician } from "@/lib/api/contracts";
 import { MapPin, ChevronRight } from "lucide-react";
+import {
+  usePoliticiansQuery,
+  useProjectsQuery,
+  useRegionsQuery,
+} from "@/hooks/queries/useCivicQueries";
 
 const RegionExplorer = () => {
   const [province, setProvince] = useState("");
@@ -14,13 +18,16 @@ const RegionExplorer = () => {
   const [municipality, setMunicipality] = useState("");
   const [ward, setWard] = useState("");
   const [selectedPolitician, setSelectedPolitician] = useState<Politician | null>(null);
+  const { data: regions, isLoading: isRegionsLoading } = useRegionsQuery();
+  const { data: politicians = [], isLoading: isPoliticiansLoading } = usePoliticiansQuery();
+  const { data: projects = [], isLoading: isProjectsLoading } = useProjectsQuery();
 
-  const selectedProvince = mockRegions.provinces.find((p) => p.name === province);
+  const selectedProvince = regions?.provinces.find((p) => p.name === province);
   const selectedDistrict = selectedProvince?.districts.find((d) => d.name === district);
   const selectedMunicipality = selectedDistrict?.municipalities.find((m) => m.name === municipality);
 
-  const wardProjects = mockProjects.filter((p) => ward ? p.ward === ward : true);
-  const wardPoliticians = mockPoliticians.filter((p) => ward ? p.ward === ward : true);
+  const wardProjects = projects.filter((p) => (ward ? p.ward === ward : true));
+  const wardPoliticians = politicians.filter((p) => (ward ? p.ward === ward : true));
 
   const selectClass = "w-full bg-card border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 appearance-none";
 
@@ -39,7 +46,7 @@ const RegionExplorer = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           <select className={selectClass} value={province} onChange={(e) => { setProvince(e.target.value); setDistrict(""); setMunicipality(""); setWard(""); }}>
             <option value="">Select Province</option>
-            {mockRegions.provinces.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+            {regions?.provinces.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
           </select>
 
           <select className={selectClass} value={district} onChange={(e) => { setDistrict(e.target.value); setMunicipality(""); setWard(""); }} disabled={!province}>
@@ -57,6 +64,12 @@ const RegionExplorer = () => {
             {selectedMunicipality?.wards.map((w) => <option key={w} value={w}>{w}</option>)}
           </select>
         </div>
+
+        {(isRegionsLoading || isPoliticiansLoading || isProjectsLoading) && (
+          <div className="mb-8 bg-card rounded-xl border p-4 text-sm text-muted-foreground">
+            Loading regional data...
+          </div>
+        )}
 
         {/* Breadcrumb */}
         {province && (
@@ -121,7 +134,13 @@ const RegionExplorer = () => {
         )}
       </div>
       <Footer />
-      {selectedPolitician && <PoliticianPanel politician={selectedPolitician} onClose={() => setSelectedPolitician(null)} />}
+      {selectedPolitician && (
+        <PoliticianPanel
+          politician={selectedPolitician}
+          projects={projects}
+          onClose={() => setSelectedPolitician(null)}
+        />
+      )}
     </div>
   );
 };

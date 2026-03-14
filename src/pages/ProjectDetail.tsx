@@ -1,17 +1,51 @@
+import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VerificationPanel from "@/components/VerificationPanel";
 import EvidenceGallery from "@/components/EvidenceGallery";
 import ActivityFeed from "@/components/ActivityFeed";
-import { mockProjects, mockComments, getStatusColor, getStatusLabel } from "@/data/mockData";
+import { getStatusColor, getStatusLabel } from "@/data/mockData";
 import { ArrowLeft, MapPin, Calendar, User, CheckCircle, Circle } from "lucide-react";
 import type { ActivityItem } from "@/components/ActivityFeed";
+import { useCommentsByProjectQuery, useProjectQuery } from "@/hooks/queries/useCivicQueries";
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const project = mockProjects.find((p) => p.id === id);
+  const { data: project, isLoading: isProjectLoading } = useProjectQuery(id);
+  const { data: comments = [], isLoading: isCommentsLoading } = useCommentsByProjectQuery(id);
+  const activityItems: ActivityItem[] = useMemo(() => {
+    if (!project) {
+      return [];
+    }
+
+    const reviewSummary: ActivityItem = {
+      type: "verification",
+      author: "Community Review",
+      content: `${project.verificationVotes.completed} marked completed, ${project.verificationVotes.inProgress} marked in progress, ${project.verificationVotes.delayed} marked delayed.`,
+      date: project.updates[0]?.date ?? project.expectedCompletion,
+    };
+
+    return [
+      reviewSummary,
+      ...comments.map((comment) => ({
+        type: (comment.hasEvidence ? "evidence" : "comment") as ActivityItem["type"],
+        author: comment.author,
+        content: comment.content,
+        date: comment.date,
+      })),
+    ].sort((a, b) => b.date.localeCompare(a.date));
+  }, [comments, project]);
+
+  if (isProjectLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container py-20 text-center text-muted-foreground">Loading project details...</div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -24,23 +58,6 @@ const ProjectDetail = () => {
       </div>
     );
   }
-
-  const comments = mockComments.filter((c) => c.ward === project.ward);
-  const activityItems: ActivityItem[] = [
-    ...project.updates.map((u) => ({
-      type: "update" as const,
-      author: project.politicianName,
-      content: u.content,
-      date: u.date,
-    })),
-    ...comments.map((c) => ({
-      type: (c.hasEvidence ? "evidence" : "comment") as ActivityItem["type"],
-      author: c.author,
-      content: c.content,
-      date: c.date,
-      ward: c.ward,
-    })),
-  ].sort((a, b) => b.date.localeCompare(a.date));
 
   const evidenceItems = [
     { type: "photo" as const, title: "Construction progress shot", uploadedBy: "Sarah K.", date: "2026-03-10" },
@@ -115,10 +132,18 @@ const ProjectDetail = () => {
 
             <EvidenceGallery items={evidenceItems} />
 
-            {/* Discussion */}
+            {/* Comments and reviews */}
             <div>
-              <h3 className="font-bold text-foreground mb-4">Discussion</h3>
-              <ActivityFeed items={activityItems} />
+              <h3 className="font-bold text-foreground mb-4">Comments and Reviews</h3>
+              {isCommentsLoading ? (
+                <div className="bg-card rounded-xl border p-4 text-sm text-muted-foreground">Loading comments and reviews...</div>
+              ) : activityItems.length === 0 ? (
+                <div className="bg-card rounded-xl border p-4 text-sm text-muted-foreground">
+                  No comments, photo uploads, or review activity yet.
+                </div>
+              ) : (
+                <ActivityFeed items={activityItems} />
+              )}
             </div>
           </div>
 
