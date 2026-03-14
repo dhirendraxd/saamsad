@@ -34,7 +34,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
       onKeyDown={handleKeyDown}
       role="link"
       tabIndex={0}
-      className="cursor-pointer rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-primary/15 hover:shadow-card-lg focus:outline-none focus:ring-2 focus:ring-primary/15"
+      className="surface-line cursor-pointer pt-5 transition-colors hover:border-twitter-blue/50 hover:text-twitter-blue focus:outline-none focus:ring-0 focus:border-twitter-blue/50"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">

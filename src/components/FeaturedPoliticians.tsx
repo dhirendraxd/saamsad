@@ -22,20 +22,20 @@ const FeaturedPoliticians = () => {
           </div>
           <Link
             to="/explore"
-            className="hidden text-sm font-medium text-foreground transition-colors hover:text-civic-slate md:block"
+            className="hidden text-sm font-medium text-foreground transition-colors hover:text-twitter-blue md:block"
           >
             View all →
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="bg-card rounded-2xl border border-border p-6 text-sm text-muted-foreground shadow-card">
+          <div className="surface-line py-6 text-sm text-muted-foreground">
             Loading featured politicians...
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((politician) => (
-              <article key={politician.id} className="rounded-none border border-border bg-card p-6 shadow-card">
+              <article key={politician.id} className="surface-line pt-6">
                 <p className="text-xs uppercase tracking-[0.16em] text-civic-slate">{politician.ward}</p>
                 <h3 className="mt-2 text-lg font-bold text-foreground">{politician.name}</h3>
                 <p className="mt-1 text-sm text-civic-slate">{politician.party}</p>

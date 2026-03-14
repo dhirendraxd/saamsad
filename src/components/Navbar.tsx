@@ -27,7 +27,7 @@ const Navbar = () => {
               key={link.label}
               to={link.href}
               className={`text-sm font-medium transition-colors ${
-                location.pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-civic-green"
+                location.pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-twitter-blue"
               }`}
             >
               {link.label}
@@ -53,13 +53,13 @@ const Navbar = () => {
       </div>
 
       {open && (
-        <div className="md:hidden border-t bg-card px-6 py-4 space-y-3">
+        <div className="md:hidden border-t border-border bg-background/95 px-6 py-4 space-y-3 backdrop-blur">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               to={link.href}
               className={`block text-sm font-medium ${
-                location.pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-civic-green"
+                location.pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-twitter-blue"
               }`}
               onClick={() => setOpen(false)}
             >

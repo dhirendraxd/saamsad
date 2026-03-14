@@ -463,10 +463,10 @@ export const mockRegions = {
 
 export const getStatusColor = (status: Project["status"]) => {
   switch (status) {
-    case "completed": return "bg-civic-green text-civic-green-foreground";
-    case "in-progress": return "bg-accent text-accent-foreground";
-    case "delayed": return "bg-civic-amber text-civic-amber-foreground";
-    case "not-started": return "bg-muted text-muted-foreground";
+    case "completed": return "border border-civic-green/30 text-civic-green";
+    case "in-progress": return "border border-accent/30 text-accent";
+    case "delayed": return "border border-civic-amber/30 text-civic-amber";
+    case "not-started": return "border border-border text-muted-foreground";
   }
 };
 

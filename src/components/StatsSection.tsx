@@ -20,7 +20,7 @@ const StatsSection = () => {
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-8">
           {stats.map((stat) => (
-            <div key={stat.value} className="bg-muted/60 border border-border rounded-xl p-8 shadow-card animate-count-up">
+            <div key={stat.value} className="surface-line pt-6 animate-count-up">
               <p className={`text-5xl md:text-6xl font-extrabold ${stat.color}`}>
                 {stat.value}
               </p>

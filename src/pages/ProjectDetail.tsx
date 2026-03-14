@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import VerificationPanel from "@/components/VerificationPanel";
 import EvidenceGallery from "@/components/EvidenceGallery";
 import ActivityFeed from "@/components/ActivityFeed";
@@ -53,7 +52,7 @@ const ProjectDetail = () => {
         <Navbar />
         <div className="container py-20 text-center">
           <h1 className="text-2xl font-bold text-foreground">Project not found</h1>
-          <button onClick={() => navigate(-1)} className="mt-4 text-accent hover:underline">Go back</button>
+          <button onClick={() => navigate(-1)} className="mt-4 text-accent hover:text-twitter-blue hover:underline">Go back</button>
         </div>
       </div>
     );
@@ -72,7 +71,7 @@ const ProjectDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-8">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-twitter-blue mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
@@ -80,7 +79,7 @@ const ProjectDetail = () => {
         <div className="mb-8">
           <div className="flex flex-wrap items-start gap-3 mb-3">
             <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">{project.title}</h1>
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}`}>
+            <span className={`rounded-none px-3 py-1 text-xs font-semibold ${getStatusColor(project.status)}`}>
               {getStatusLabel(project.status)}
             </span>
           </div>
@@ -95,7 +94,7 @@ const ProjectDetail = () => {
         </div>
 
         {/* Progress bar */}
-        <div className="bg-card rounded-2xl p-6 shadow-card mb-8">
+        <div className="surface-line mb-8 pt-6">
           <div className="flex justify-between text-sm mb-2">
             <span className="font-semibold text-foreground">Overall Progress</span>
             <span className="font-extrabold text-accent">{project.progress}%</span>
@@ -108,7 +107,7 @@ const ProjectDetail = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {/* Timeline */}
-            <div className="bg-card rounded-2xl p-6 shadow-card">
+            <div className="surface-line pt-6">
               <h3 className="font-bold text-foreground mb-5">Project Timeline</h3>
               <div className="space-y-4">
                 {project.milestones.map((m, i) => (
@@ -136,9 +135,9 @@ const ProjectDetail = () => {
             <div>
               <h3 className="font-bold text-foreground mb-4">Comments and Reviews</h3>
               {isCommentsLoading ? (
-                <div className="bg-card rounded-xl border p-4 text-sm text-muted-foreground">Loading comments and reviews...</div>
+                <div className="surface-line pt-4 text-sm text-muted-foreground">Loading comments and reviews...</div>
               ) : activityItems.length === 0 ? (
-                <div className="bg-card rounded-xl border p-4 text-sm text-muted-foreground">
+                <div className="surface-line pt-4 text-sm text-muted-foreground">
                   No comments, photo uploads, or review activity yet.
                 </div>
               ) : (
@@ -150,14 +149,13 @@ const ProjectDetail = () => {
           <div className="space-y-6">
             <VerificationPanel votes={project.verificationVotes} />
 
-            <div className="bg-card rounded-2xl p-6 shadow-card">
+            <div className="surface-line pt-6">
               <h3 className="font-bold text-foreground mb-3">Category</h3>
-              <span className="bg-accent/10 text-accent px-3 py-1.5 rounded-full text-sm font-medium">{project.category}</span>
+              <span className="inline-flex border-b border-accent/40 pb-1 text-sm font-medium text-accent">{project.category}</span>
             </div>
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

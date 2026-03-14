@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { BookOpen, Clock } from "lucide-react";
 import { useEducationTopicsQuery } from "@/hooks/queries/useCivicQueries";
 
@@ -29,15 +28,15 @@ const CivicEducation = () => {
         </div>
 
         {/* Category filter */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="mb-8 flex flex-wrap gap-x-6 gap-y-3 border-b border-border pb-2">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`tab-link py-2 ${
                 activeCategory === cat
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "border-foreground text-foreground"
+                  : "text-muted-foreground hover:text-twitter-blue"
               }`}
             >
               {cat}
@@ -47,17 +46,17 @@ const CivicEducation = () => {
 
         {/* Cards */}
         {isLoading ? (
-          <div className="bg-card rounded-xl border p-6 text-sm text-muted-foreground">Loading civic education topics...</div>
+          <div className="surface-line py-6 text-sm text-muted-foreground">Loading civic education topics...</div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((topic) => (
               <div
                 key={topic.id}
-                className="bg-card rounded-2xl p-6 shadow-card hover:shadow-card-lg transition-all cursor-pointer border border-transparent hover:border-accent/20 group"
+                className="surface-line cursor-pointer pt-6 transition-colors hover:border-accent/30 group"
               >
                 <span className="text-3xl mb-4 block">{topic.icon}</span>
                 <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">{topic.category}</span>
-                <h3 className="font-bold text-lg text-foreground mt-1 mb-2 group-hover:text-accent transition-colors">{topic.title}</h3>
+                <h3 className="font-bold text-lg text-foreground mt-1 mb-2 group-hover:text-twitter-blue transition-colors">{topic.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4">{topic.description}</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{topic.readTime}</span>
@@ -68,7 +67,6 @@ const CivicEducation = () => {
           </div>
         )}
       </div>
-      <Footer />
     </div>
   );
 };

@@ -52,6 +52,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "twitter-blue": "hsl(var(--twitter-blue))",
         civic: {
           green: "hsl(var(--civic-green))",
           "green-foreground": "hsl(var(--civic-green-foreground))",

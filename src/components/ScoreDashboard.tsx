@@ -43,7 +43,7 @@ const ScoreRing = ({ value, label, size = 80 }: { value: number; label: string; 
 
 const ScoreDashboard = ({ accountability, transparency, communityTrust, engagement }: ScoreDashboardProps) => {
   return (
-    <div className="bg-card rounded-2xl p-6 shadow-card">
+    <div className="surface-line pt-6">
       <h3 className="font-bold text-foreground mb-5">Performance Scores</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <ScoreRing value={accountability} label="Accountability" />

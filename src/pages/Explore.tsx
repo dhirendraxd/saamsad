@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import PoliticianCard from "@/components/PoliticianCard";
 import ProjectCard from "@/components/ProjectCard";
 import PoliticianPanel from "@/components/PoliticianPanel";
@@ -31,15 +30,15 @@ const ExplorePage = () => {
         <p className="text-muted-foreground mb-8">Discover politicians, track projects, and see who leads in transparency.</p>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-muted rounded-xl p-1 mb-8 w-fit">
+        <div className="mb-8 flex w-fit gap-6 overflow-x-auto border-b border-border">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`tab-link ${
                 activeTab === tab
-                  ? "bg-card text-foreground shadow-card"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-foreground text-foreground"
+                  : "text-muted-foreground hover:text-twitter-blue"
               }`}
             >
               {tab}
@@ -50,7 +49,7 @@ const ExplorePage = () => {
         {/* Politicians */}
         {activeTab === "Politicians" && (
           isPoliticiansLoading ? (
-            <div className="bg-card rounded-xl border p-6 text-sm text-muted-foreground">Loading politicians...</div>
+            <div className="surface-line py-6 text-sm text-muted-foreground">Loading politicians...</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {politicians.map((politician) => (
@@ -67,7 +66,7 @@ const ExplorePage = () => {
         {/* Projects */}
         {activeTab === "Projects" && (
           isProjectsLoading ? (
-            <div className="bg-card rounded-xl border p-6 text-sm text-muted-foreground">Loading projects...</div>
+            <div className="surface-line py-6 text-sm text-muted-foreground">Loading projects...</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project) => (
@@ -80,14 +79,14 @@ const ExplorePage = () => {
         {/* Transparency Leaders */}
         {activeTab === "Transparency Leaders" && (
           isPoliticiansLoading ? (
-            <div className="bg-card rounded-xl border p-6 text-sm text-muted-foreground">Loading leader rankings...</div>
+            <div className="surface-line py-6 text-sm text-muted-foreground">Loading leader rankings...</div>
           ) : (
             <div className="space-y-3">
               {sortedByTransparency.map((politician, index) => (
                 <div
                   key={politician.id}
                   onClick={() => setSelectedPolitician(politician)}
-                  className="flex items-center gap-4 bg-card rounded-2xl p-5 shadow-card hover:shadow-card-lg transition-all cursor-pointer border border-transparent hover:border-accent/20"
+                  className="surface-line flex cursor-pointer items-center gap-4 pt-5 transition-colors hover:border-accent/30"
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-lg ${
                     index === 0 ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"
@@ -116,7 +115,6 @@ const ExplorePage = () => {
           )
         )}
       </div>
-      <Footer />
       {selectedPolitician && (
         <PoliticianPanel
           politician={selectedPolitician}

@@ -13,11 +13,11 @@ interface EvidenceGalleryProps {
 
 const EvidenceGallery = ({ items }: EvidenceGalleryProps) => {
   return (
-    <div className="bg-card rounded-2xl p-6 shadow-card">
+    <div className="surface-line pt-6">
       <h3 className="font-bold text-foreground mb-4">Evidence Gallery</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {items.map((item, i) => (
-          <div key={i} className="bg-muted rounded-xl p-4 flex flex-col items-center justify-center text-center aspect-square hover:bg-accent/5 transition-colors cursor-pointer">
+          <div key={i} className="surface-line flex aspect-square flex-col items-center justify-center pt-4 text-center transition-colors cursor-pointer hover:border-foreground/30">
             {item.type === "photo" ? (
               <Camera className="w-8 h-8 text-muted-foreground mb-2" />
             ) : (

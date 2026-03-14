@@ -32,7 +32,7 @@ const ActivityFeed = ({ items }: ActivityFeedProps) => {
       {items.map((item, i) => {
         const Icon = iconMap[item.type];
         return (
-          <div key={i} className="flex gap-3 p-3 bg-card rounded-xl shadow-card">
+          <div key={i} className="surface-line flex gap-3 pt-4">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${colorMap[item.type]}`}>
               <Icon className="w-4 h-4" />
             </div>

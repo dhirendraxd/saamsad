@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
 import PoliticianCard from "@/components/PoliticianCard";
 import PoliticianPanel from "@/components/PoliticianPanel";
@@ -29,7 +28,7 @@ const RegionExplorer = () => {
   const wardProjects = projects.filter((p) => (ward ? p.ward === ward : true));
   const wardPoliticians = politicians.filter((p) => (ward ? p.ward === ward : true));
 
-  const selectClass = "w-full bg-card border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 appearance-none";
+  const selectClass = "field-line appearance-none";
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,7 +65,7 @@ const RegionExplorer = () => {
         </div>
 
         {(isRegionsLoading || isPoliticiansLoading || isProjectsLoading) && (
-          <div className="mb-8 bg-card rounded-xl border p-4 text-sm text-muted-foreground">
+          <div className="surface-line mb-8 pt-4 text-sm text-muted-foreground">
             Loading regional data...
           </div>
         )}
@@ -85,15 +84,15 @@ const RegionExplorer = () => {
         {ward && (
           <div className="space-y-10">
             <div className="grid sm:grid-cols-3 gap-4">
-              <div className="bg-card rounded-2xl p-6 shadow-card text-center">
+              <div className="surface-line py-6 text-center">
                 <p className="text-3xl font-extrabold text-accent">{wardPoliticians.length}</p>
                 <p className="text-sm text-muted-foreground">Politicians</p>
               </div>
-              <div className="bg-card rounded-2xl p-6 shadow-card text-center">
+              <div className="surface-line py-6 text-center">
                 <p className="text-3xl font-extrabold text-foreground">{wardProjects.length}</p>
                 <p className="text-sm text-muted-foreground">Projects</p>
               </div>
-              <div className="bg-card rounded-2xl p-6 shadow-card text-center">
+              <div className="surface-line py-6 text-center">
                 <p className="text-3xl font-extrabold text-civic-green">
                   {wardProjects.length > 0 ? Math.round(wardProjects.reduce((a, p) => a + p.progress, 0) / wardProjects.length) : 0}%
                 </p>
@@ -133,7 +132,6 @@ const RegionExplorer = () => {
           </div>
         )}
       </div>
-      <Footer />
       {selectedPolitician && (
         <PoliticianPanel
           politician={selectedPolitician}

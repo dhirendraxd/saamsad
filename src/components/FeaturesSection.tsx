@@ -32,7 +32,7 @@ const FeaturesSection = () => {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="rounded-none border border-border bg-card p-6 shadow-card transition-colors hover:bg-muted/35"
+              className="surface-line pt-6 transition-colors hover:border-foreground/30"
             >
               <p className="mb-3 text-xs font-semibold tracking-[0.18em] text-civic-slate">0{index + 1}</p>
               <h3 className="mb-2 text-lg font-bold text-foreground">{feature.title}</h3>

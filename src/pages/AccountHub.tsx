@@ -1,6 +1,5 @@
 import { type ElementType, type FormEvent, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
 import ActivityFeed from "@/components/ActivityFeed";
@@ -104,7 +103,7 @@ const AccountHub = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container py-10">
-          <div className="max-w-xl bg-card rounded-2xl shadow-card p-6">
+          <div className="surface-band max-w-xl p-6">
             <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">Identity Verification</p>
             <h1 className="text-2xl font-extrabold text-foreground mb-3">Sign in to your Account Hub</h1>
             <p className="text-sm text-muted-foreground mb-6">
@@ -115,7 +114,7 @@ const AccountHub = () => {
               <div>
                 <label className="text-sm font-medium text-foreground block mb-1">National ID</label>
                 <input
-                  className="w-full bg-muted border rounded-none px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  className="field-line"
                   value={identityForm.nationalId}
                   onChange={(event) =>
                     setIdentityForm((prev) => ({ ...prev, nationalId: event.target.value }))
@@ -127,7 +126,7 @@ const AccountHub = () => {
               <div>
                 <label className="text-sm font-medium text-foreground block mb-1">Full Name</label>
                 <input
-                  className="w-full bg-muted border rounded-none px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  className="field-line"
                   value={identityForm.name}
                   onChange={(event) =>
                     setIdentityForm((prev) => ({ ...prev, name: event.target.value }))
@@ -140,7 +139,7 @@ const AccountHub = () => {
                 <div>
                   <label className="text-sm font-medium text-foreground block mb-1">Ward</label>
                   <input
-                    className="w-full bg-muted border rounded-none px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    className="field-line"
                     value={identityForm.ward}
                     onChange={(event) =>
                       setIdentityForm((prev) => ({ ...prev, ward: event.target.value }))
@@ -152,7 +151,7 @@ const AccountHub = () => {
                 <div>
                   <label className="text-sm font-medium text-foreground block mb-1">Municipality</label>
                   <input
-                    className="w-full bg-muted border rounded-none px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    className="field-line"
                     value={identityForm.municipality}
                     onChange={(event) =>
                       setIdentityForm((prev) => ({ ...prev, municipality: event.target.value }))
@@ -173,7 +172,6 @@ const AccountHub = () => {
             </form>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -188,7 +186,7 @@ const AccountHub = () => {
           </Button>
         </div>
 
-        <div className="bg-card rounded-2xl p-6 shadow-card mb-6">
+        <div className="surface-line mb-6 pt-6">
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
               <User className="w-8 h-8 text-primary" />
@@ -213,13 +211,13 @@ const AccountHub = () => {
           </div>
         </div>
 
-        <div className="flex gap-1 bg-muted rounded-xl p-1 mb-8 overflow-x-auto">
+        <div className="mb-8 flex gap-6 overflow-x-auto border-b border-border">
           {tabs.filter((tab) => accountRole === "citizen" ? tab.key !== "transparency" : true).map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                activeTab === tab.key ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground"
+              className={`tab-link flex items-center gap-2 whitespace-nowrap ${
+                activeTab === tab.key ? "border-foreground text-foreground" : "text-muted-foreground hover:text-twitter-blue"
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -241,7 +239,7 @@ const AccountHub = () => {
               />
             )}
             {accountRole === "citizen" && (
-              <div className="bg-card rounded-2xl p-6 shadow-card">
+              <div className="surface-line pt-6">
                 <h2 className="text-lg font-bold text-foreground mb-2">Citizen Account</h2>
                 <p className="text-sm text-muted-foreground">
                   You are verified for {session.ward}. Use this hub to follow local projects, submit evidence, and participate in project verification.
@@ -253,7 +251,7 @@ const AccountHub = () => {
                 {accountRole === "citizen" ? "Local Projects" : "Your Projects"}
               </h2>
               {isProjectsLoading ? (
-                <div className="bg-card rounded-xl border p-4 text-sm text-muted-foreground">Loading projects...</div>
+                <div className="surface-line pt-4 text-sm text-muted-foreground">Loading projects...</div>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
@@ -271,7 +269,7 @@ const AccountHub = () => {
               </div>
             )}
             {isProjectsLoading ? (
-              <div className="bg-card rounded-xl border p-4 text-sm text-muted-foreground">Loading projects...</div>
+              <div className="surface-line pt-4 text-sm text-muted-foreground">Loading projects...</div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
@@ -290,26 +288,26 @@ const AccountHub = () => {
               <Button variant="civic" size="sm"><Upload className="w-4 h-4 mr-1" />Upload Document</Button>
             </div>
             {["Asset Declaration 2025", "Campaign Expenditure Report", "Policy Proposal: Clean Water"].map((doc) => (
-              <div key={doc} className="bg-card rounded-xl p-4 shadow-card flex items-center justify-between">
+              <div key={doc} className="surface-line flex items-center justify-between pt-4">
                 <div>
                   <p className="font-medium text-foreground">{doc}</p>
                   <p className="text-xs text-muted-foreground">Uploaded Jan 2026</p>
                 </div>
-                <span className="text-xs bg-civic-green/10 text-civic-green px-2 py-1 rounded-full font-medium">Verified</span>
+                <span className="border-b border-civic-green/40 pb-0.5 text-xs font-medium text-civic-green">Verified</span>
               </div>
             ))}
           </div>
         )}
 
         {activeTab === "settings" && (
-          <div className="bg-card rounded-2xl p-6 shadow-card max-w-lg">
+          <div className="surface-line max-w-lg pt-6">
             <h3 className="font-bold text-foreground mb-4">Profile Settings</h3>
             <div className="space-y-4">
               {["Display Name", "Email", "Phone", "Ward"].map((field) => (
                 <div key={field}>
                   <label className="text-sm font-medium text-foreground block mb-1">{field}</label>
                   <input
-                    className="w-full bg-muted border rounded-none px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    className="field-line"
                     placeholder={
                       field === "Display Name"
                         ? session.name
@@ -325,7 +323,6 @@ const AccountHub = () => {
           </div>
         )}
       </div>
-      <Footer />
     </div>
   );
 };

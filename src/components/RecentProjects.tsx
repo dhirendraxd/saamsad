@@ -21,7 +21,7 @@ const RecentProjects = () => {
   );
 
   return (
-    <section className="bg-card border-t">
+    <section className="bg-background border-t border-border">
       <div className="container py-16 md:py-24">
         <div className="flex items-end justify-between mb-10">
           <div>
@@ -32,20 +32,20 @@ const RecentProjects = () => {
           </div>
           <Link
             to="/explore"
-            className="hidden text-sm font-medium text-foreground transition-colors hover:text-civic-slate md:block"
+            className="hidden text-sm font-medium text-foreground transition-colors hover:text-twitter-blue md:block"
           >
             View all →
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="bg-background rounded-2xl border border-border p-6 text-sm text-muted-foreground shadow-card">
+          <div className="surface-line py-6 text-sm text-muted-foreground">
             Loading recent projects...
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {recent.map((project) => (
-              <article key={project.id} className="rounded-none border border-border bg-background p-6 shadow-card">
+              <article key={project.id} className="surface-line pt-6">
                 <p className="text-xs uppercase tracking-[0.16em] text-civic-slate">{project.ward}</p>
                 <h3 className="mt-2 text-lg font-bold text-foreground">{project.title}</h3>
                 <div className="my-3 h-px w-full bg-border" />

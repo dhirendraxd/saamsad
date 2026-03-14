@@ -18,7 +18,7 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
       <div className="relative w-full max-w-xl bg-background overflow-y-auto shadow-2xl animate-fade-up">
         <div className="sticky top-0 bg-background/95 backdrop-blur border-b p-4 flex items-center justify-between z-10">
           <h2 className="font-bold text-lg text-foreground">Politician Profile</h2>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 text-muted-foreground transition-colors hover:text-twitter-blue">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -50,7 +50,7 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
           {politician.badges.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {politician.badges.map((badge) => (
-                <span key={badge} className="inline-flex items-center gap-1.5 rounded-none border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground">
+                <span key={badge} className="inline-flex items-center gap-1.5 rounded-none border-0 border-b border-border px-0 pb-1 text-xs font-medium text-foreground">
                   <Award className="w-3 h-3" />
                   {badge}
                 </span>
@@ -69,7 +69,7 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
           />
 
           {/* Promise Stats */}
-          <div className="bg-card rounded-2xl p-5 shadow-card">
+          <div className="surface-line pt-5">
             <h4 className="font-bold text-foreground mb-3 flex items-center gap-2">
               <BarChart3 className="w-4 h-4" /> Promise Overview
             </h4>
@@ -80,7 +80,7 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
                 { label: "Delayed", value: politician.delayedPromises, color: "text-civic-amber" },
                 { label: "Failed", value: politician.failedPromises, color: "text-destructive" },
               ].map((s) => (
-                <div key={s.label} className="bg-muted rounded-lg p-2">
+                <div key={s.label} className="border-t border-border pt-2">
                   <p className={`text-xl font-extrabold ${s.color}`}>{s.value}</p>
                   <p className="text-[10px] text-muted-foreground">{s.label}</p>
                 </div>
@@ -89,7 +89,7 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
           </div>
 
           {/* Manifesto */}
-          <div className="bg-card rounded-2xl p-5 shadow-card">
+          <div className="surface-line pt-5">
             <h4 className="font-bold text-foreground mb-2 flex items-center gap-2">
               <FileText className="w-4 h-4" /> Manifesto
             </h4>
@@ -108,7 +108,7 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground shadow-card">
+              <div className="surface-line pt-4 text-sm text-muted-foreground">
                 No projects are available for this profile yet.
               </div>
             )}

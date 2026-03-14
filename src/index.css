@@ -42,9 +42,10 @@
     --civic-amber-foreground: 0 0% 100%;
     --civic-navy: 220 65% 18%;
     --civic-slate: 220 14% 36%;
+    --twitter-blue: 203 89% 53%;
     --hero-gradient: linear-gradient(135deg, hsl(220 65% 28%), hsl(220 65% 18%));
-    --card-shadow: 0 1px 3px 0 hsl(220 20% 14% / 0.06), 0 1px 2px -1px hsl(220 20% 14% / 0.06);
-    --card-shadow-lg: 0 10px 30px -10px hsl(220 20% 14% / 0.1);
+    --card-shadow: none;
+    --card-shadow-lg: none;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -84,6 +85,7 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --twitter-blue: 203 89% 53%;
   }
 }
 
@@ -104,6 +106,22 @@
 @layer components {
   .homepage-vibe {
     font-family: "Manrope", "Plus Jakarta Sans", system-ui, sans-serif;
+  }
+
+  .surface-line {
+    @apply rounded-none border-0 border-t border-border bg-transparent shadow-none;
+  }
+
+  .surface-band {
+    @apply rounded-none border-y border-border bg-transparent shadow-none;
+  }
+
+  .tab-link {
+    @apply rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 py-3 text-sm font-medium transition-colors;
+  }
+
+  .field-line {
+    @apply w-full rounded-none border-0 border-b border-border bg-transparent px-0 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:border-foreground;
   }
 
   .homepage-vibe h1,
