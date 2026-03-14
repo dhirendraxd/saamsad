@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import civicIllustration from "@/assets/civic-education-illustration.png";
 
 const Footer = () => {
   return (
     <footer className="border-t bg-card">
       <div className="container py-12">
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           <div>
             <Link to="/" className="font-display text-lg font-bold text-foreground">CivicLedger</Link>
             <p className="text-sm text-muted-foreground mt-2">
@@ -17,13 +18,26 @@ const Footer = () => {
               <li><Link to="/explore" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Explore</Link></li>
               <li><Link to="/regions" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Regions</Link></li>
               <li><Link to="/education" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Education</Link></li>
+              <li><Link to="/about" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">About</Link></li>
               <li><Link to="/account" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Account</Link></li>
             </ul>
           </div>
+          <div className="flex flex-col gap-3">
+            <Link to="/education" className="block group">
+              <img
+                src={civicIllustration}
+                alt="Civic Education — diplomatic and political illustration"
+                className="w-full max-w-[220px] opacity-80 group-hover:opacity-100 transition-opacity"
+              />
+            </Link>
+            <div>
+              <p className="font-semibold text-sm text-foreground">Civic Education Hub</p>
+              <p className="text-xs text-muted-foreground mt-1">Learn how democracy, governance, and citizen rights work.</p>
+              <Link to="/education" className="text-xs text-twitter-blue mt-2 inline-block hover:underline">Explore lessons →</Link>
+            </div>
+          </div>
         </div>
-        <div className="border-t mt-10 pt-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} CivicLedger. All rights reserved.
-        </div>
+
       </div>
     </footer>
   );

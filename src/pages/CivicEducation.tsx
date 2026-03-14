@@ -2,8 +2,9 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { BookOpen, Clock } from "lucide-react";
 import { useEducationTopicsQuery } from "@/hooks/queries/useCivicQueries";
+import civicIllustration from "@/assets/civic-education-illustration.png";
 
-const categories = ["All", "Democracy Basics", "Local Government", "Elections", "Public Budgeting", "Citizen Rights"];
+const categories = ["All", "Local Governance", "Digital Rights", "Anti-Corruption", "Electoral System"];
 
 const CivicEducation = () => {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -17,14 +18,23 @@ const CivicEducation = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-10">
-        <div className="max-w-3xl mb-10">
-          <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">Civic Education Hub</p>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">
-            Learn How Governance Works
-          </h1>
-          <p className="text-muted-foreground">
-            A civic knowledge library designed to help every citizen understand democracy, governance, and their rights.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center gap-8 mb-10">
+          <div className="flex-1 max-w-2xl">
+            <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">Civic Education Hub</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">
+              Learn How Governance Works
+            </h1>
+            <p className="text-muted-foreground">
+              A civic knowledge library designed to help every citizen understand democracy, governance, and their rights.
+            </p>
+          </div>
+          <div className="flex-shrink-0 md:w-64 lg:w-80">
+            <img
+              src={civicIllustration}
+              alt="Diplomatic and political illustration"
+              className="w-full opacity-90"
+            />
+          </div>
         </div>
 
         {/* Category filter */}

@@ -13,6 +13,7 @@ import RegionExplorer from "./pages/RegionExplorer.tsx";
 import CivicEducation from "./pages/CivicEducation.tsx";
 import AccountHub from "./pages/AccountHub.tsx";
 import AuthPage from "./pages/Auth.tsx";
+import About from "./pages/About.tsx";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/education" element={<CivicEducation />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/account" element={<AccountHub />} />
+              <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

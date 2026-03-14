@@ -389,15 +389,38 @@ export const mockComments: Comment[] = [
 ];
 
 export const mockEducationTopics: EducationTopic[] = [
-  { id: "e1", title: "How Democracy Works", description: "Understanding the foundations of democratic governance and citizen participation.", category: "Democracy Basics", readTime: "8 min", icon: "🏛️" },
-  { id: "e2", title: "Your Local Government Explained", description: "Learn about ward, municipality, district, and province structures.", category: "Local Government", readTime: "6 min", icon: "🏢" },
-  { id: "e3", title: "How Elections Are Conducted", description: "The step-by-step process of elections, from registration to results.", category: "Elections", readTime: "10 min", icon: "🗳️" },
-  { id: "e4", title: "Understanding Public Budgets", description: "How government budgets are created, allocated, and spent.", category: "Public Budgeting", readTime: "12 min", icon: "💰" },
-  { id: "e5", title: "Your Rights as a Citizen", description: "Fundamental rights and responsibilities in a democratic society.", category: "Citizen Rights", readTime: "7 min", icon: "⚖️" },
-  { id: "e6", title: "What is Accountability?", description: "Why accountability matters and how citizens can demand it.", category: "Democracy Basics", readTime: "5 min", icon: "🔍" },
-  { id: "e7", title: "How Laws Are Made", description: "The legislative process from proposal to enforcement.", category: "Democracy Basics", readTime: "9 min", icon: "📜" },
-  { id: "e8", title: "Ward Development Planning", description: "How development plans are created and implemented at the ward level.", category: "Local Government", readTime: "8 min", icon: "📋" },
-  { id: "e9", title: "Reading Government Reports", description: "A guide to understanding official government documents and reports.", category: "Public Budgeting", readTime: "11 min", icon: "📊" },
+  {
+    id: "e1",
+    title: "Federalism & Local Governance",
+    description: "Needed so citizens know which government level is responsible and where to demand services.",
+    category: "Local Governance",
+    readTime: "10 min",
+    icon: "🏛️",
+  },
+  {
+    id: "e2",
+    title: "Digital Rights & Freedom of Expression",
+    description: "Needed so youths can protect free expression and understand the laws of online spaces.",
+    category: "Digital Rights",
+    readTime: "8 min",
+    icon: "🔐",
+  },
+  {
+    id: "e3",
+    title: "Anti-Corruption & Transparency",
+    description: "Needed to spot abuse of power and hold public officials accountable for clean governance.",
+    category: "Anti-Corruption",
+    readTime: "9 min",
+    icon: "⚖️",
+  },
+  {
+    id: "e4",
+    title: "The Electoral System",
+    description: "Needed so voters understand how FPTP and PR seats are formed and why inclusion matters.",
+    category: "Electoral System",
+    readTime: "12 min",
+    icon: "🗳️",
+  },
 ];
 
 export const mockRegions = {
