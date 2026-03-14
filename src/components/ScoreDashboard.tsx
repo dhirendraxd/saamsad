@@ -24,7 +24,7 @@ const ScoreRing = ({ value, label, size = 80 }: { value: number; label: string; 
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={value >= 80 ? "hsl(var(--civic-green))" : value >= 60 ? "hsl(var(--civic-amber))" : "hsl(var(--destructive))"}
+            stroke={value >= 60 ? "hsl(var(--civic-green))" : "hsl(var(--destructive))"}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={circumference}

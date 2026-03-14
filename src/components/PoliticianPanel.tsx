@@ -77,7 +77,7 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
               {[
                 { label: "Total", value: politician.totalPromises, color: "text-foreground" },
                 { label: "Completed", value: politician.completedPromises, color: "text-civic-green" },
-                { label: "Delayed", value: politician.delayedPromises, color: "text-civic-amber" },
+                { label: "Delayed", value: politician.delayedPromises, color: "text-civic-green" },
                 { label: "Failed", value: politician.failedPromises, color: "text-destructive" },
               ].map((s) => (
                 <div key={s.label} className="border-t border-border pt-2">

@@ -481,6 +481,6 @@ export const getStatusLabel = (status: Project["status"]) => {
 
 export const getScoreColor = (score: number) => {
   if (score >= 80) return "text-civic-green";
-  if (score >= 60) return "text-civic-amber";
+  if (score >= 60) return "text-civic-green";
   return "text-destructive";
 };

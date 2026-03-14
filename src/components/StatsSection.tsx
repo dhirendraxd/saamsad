@@ -1,7 +1,7 @@
 const stats = [
   { value: "500+", label: "Projects tracked with public timelines", color: "text-civic-slate" },
   { value: "1,200+", label: "Evidence uploads and citizen comments logged", color: "text-civic-slate" },
-  { value: "85%", label: "Community confirmations marked as in-progress or completed", color: "text-civic-amber" },
+  { value: "85%", label: "Community confirmations marked as in-progress or completed", color: "text-civic-green" },
 ];
 
 const StatsSection = () => {

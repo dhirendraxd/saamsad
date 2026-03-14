@@ -41,7 +41,7 @@ const FeaturedPoliticians = () => {
                 <p className="mt-1 text-sm text-civic-slate">{politician.party}</p>
                 <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-4">
                   <div>
-                    <p className="text-2xl font-extrabold text-civic-amber">{politician.accountabilityScore}%</p>
+                    <p className="text-2xl font-extrabold text-civic-green">{politician.accountabilityScore}%</p>
                     <p className="text-xs text-civic-slate">Accountability</p>
                   </div>
                   <div>

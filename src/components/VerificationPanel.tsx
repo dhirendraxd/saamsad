@@ -13,10 +13,34 @@ const VerificationPanel = ({ votes }: VerificationPanelProps) => {
   const total = votes.completed + votes.inProgress + votes.delayed + votes.notStarted;
 
   const options = [
-    { label: "Completed", value: votes.completed, icon: ThumbsUp, color: "text-civic-green" },
-    { label: "In Progress", value: votes.inProgress, icon: Clock, color: "text-accent" },
-    { label: "Delayed", value: votes.delayed, icon: AlertTriangle, color: "text-civic-amber" },
-    { label: "Not Started", value: votes.notStarted, icon: XCircle, color: "text-destructive" },
+    {
+      label: "Completed",
+      value: votes.completed,
+      icon: ThumbsUp,
+      labelColor: "text-civic-green",
+      valueColor: "text-civic-green",
+    },
+    {
+      label: "In Progress",
+      value: votes.inProgress,
+      icon: Clock,
+      labelColor: "text-accent",
+      valueColor: "text-accent",
+    },
+    {
+      label: "Delayed",
+      value: votes.delayed,
+      icon: AlertTriangle,
+      labelColor: "text-civic-amber",
+      valueColor: "text-civic-green",
+    },
+    {
+      label: "Not Started",
+      value: votes.notStarted,
+      icon: XCircle,
+      labelColor: "text-destructive",
+      valueColor: "text-destructive",
+    },
   ];
 
   return (
@@ -30,11 +54,11 @@ const VerificationPanel = ({ votes }: VerificationPanelProps) => {
           return (
             <button
               key={opt.label}
-              className={`flex w-full items-center gap-3 border-t border-border pt-3 text-left transition-colors hover:text-twitter-blue ${opt.color}`}
+              className="flex w-full items-center gap-3 border-t border-border pt-3 text-left text-foreground transition-colors hover:text-twitter-blue"
             >
-              <opt.icon className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm font-medium flex-1 text-left">{opt.label}</span>
-              <span className="text-xs font-bold">{pct}%</span>
+              <opt.icon className={`w-4 h-4 flex-shrink-0 ${opt.labelColor}`} />
+              <span className={`flex-1 text-left text-sm font-medium ${opt.labelColor}`}>{opt.label}</span>
+              <span className={`text-xs font-bold ${opt.valueColor}`}>{pct}%</span>
               <span className="text-[10px] text-muted-foreground">({opt.value})</span>
             </button>
           );

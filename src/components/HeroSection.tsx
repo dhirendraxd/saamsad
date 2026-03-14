@@ -8,12 +8,18 @@ const HeroSection = () => {
       <div className="container py-20 md:py-32 lg:py-40 xl:py-44">
         <div className="grid items-center gap-10 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-10 lg:gap-12 xl:gap-12">
           {/* Left */}
-          <div className="relative z-20 space-y-5 md:max-w-xl lg:pr-8 xl:pr-12">
-            <h1 className="max-w-[13ch] text-[clamp(2.55rem,5.1vw,4.45rem)] font-bold leading-[0.98] tracking-tight text-foreground">
-              <span className="block whitespace-nowrap">Track Promises.</span>
-              <span className="block whitespace-nowrap">Verify Progress.</span>
-            </h1>
-            <p className="max-w-sm text-base text-muted-foreground md:text-[1.02rem]">
+          <div className="relative z-20 max-w-[30rem] space-y-5 lg:max-w-[32rem] lg:pr-8 xl:max-w-[34rem] xl:pr-12">
+            <div className="space-y-3">
+              <h1 className="flex flex-col items-start gap-1 tracking-tight">
+                <span className="whitespace-nowrap text-[clamp(2.55rem,5.1vw,4.45rem)] font-bold leading-[0.98] text-foreground">
+                  Track Promises.
+                </span>
+                <span className="whitespace-nowrap text-[clamp(1.9rem,3.7vw,3.05rem)] font-bold leading-[1.02] text-muted-foreground">
+                  Verify Progress.
+                </span>
+              </h1>
+            </div>
+            <p className="max-w-[28rem] text-base leading-relaxed text-muted-foreground md:text-[1.02rem]">
               CivicLedger turns public promises into trackable projects with updates, evidence, and citizen review.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">

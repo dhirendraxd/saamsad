@@ -57,7 +57,7 @@ const RecentProjects = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-civic-slate">Progress</p>
-                    <p className="text-2xl font-extrabold text-civic-amber">{project.progress}%</p>
+                    <p className="text-2xl font-extrabold text-civic-green">{project.progress}%</p>
                   </div>
                 </div>
               </article>

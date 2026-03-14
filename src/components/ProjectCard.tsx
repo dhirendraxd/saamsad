@@ -55,7 +55,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
       <div className="mt-4">
         <div className="flex justify-between text-xs mb-1.5">
           <span className="text-muted-foreground">Progress</span>
-          <span className="font-semibold text-civic-amber">{project.progress}%</span>
+          <span className="font-semibold text-civic-green">{project.progress}%</span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div

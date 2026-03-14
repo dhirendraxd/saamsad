@@ -50,7 +50,7 @@ const PoliticianCard = ({ politician, onClick }: PoliticianCardProps) => {
 
       <div className="mt-4 grid grid-cols-2 gap-6">
         <div className="border-t border-border pt-3 text-center">
-          <p className="text-lg font-extrabold text-civic-amber">
+          <p className="text-lg font-extrabold text-civic-green">
             {politician.accountabilityScore}%
           </p>
           <p className="text-[10px] text-muted-foreground">Accountability</p>
