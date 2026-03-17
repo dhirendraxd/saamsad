@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router";
+import { resolveAssetSrc } from "@/lib/asset";
 import civicIllustration from "@/assets/civic-education-illustration.png";
 
 const Footer = () => {
@@ -25,7 +26,7 @@ const Footer = () => {
           <div className="flex flex-col gap-3">
             <Link to="/education" className="block group">
               <img
-                src={civicIllustration}
+                src={resolveAssetSrc(civicIllustration)}
                 alt="Civic Education — diplomatic and political illustration"
                 className="w-full max-w-[220px] opacity-80 group-hover:opacity-100 transition-opacity"
               />

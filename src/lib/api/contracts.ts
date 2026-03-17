@@ -24,7 +24,6 @@ export type IdentityRegistrationInput = z.infer<typeof identityRegistrationInput
 
 export const authSessionSchema = z.object({
   userId: z.string().trim().min(2).max(128),
-  token: z.string().trim().min(16).max(256),
   role: userRoleSchema,
   name: nameSchema,
   ward: locationSchema,

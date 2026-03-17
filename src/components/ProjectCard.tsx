@@ -1,7 +1,8 @@
 import { type KeyboardEvent } from "react";
 import { MapPin, MessageSquare, Image } from "lucide-react";
-import { type Project, getStatusColor, getStatusLabel } from "@/data/mockData";
-import { useNavigate } from "react-router-dom";
+import { getStatusColor, getStatusLabel } from "@/data/mockData";
+import type { Project } from "@/lib/api/contracts";
+import { useNavigate } from "@/lib/router";
 
 interface ProjectCardProps {
   project: Project;

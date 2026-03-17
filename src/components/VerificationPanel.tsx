@@ -2,41 +2,47 @@ import { ThumbsUp, Clock, AlertTriangle, XCircle } from "lucide-react";
 
 interface VerificationPanelProps {
   votes: {
-    completed: number;
-    inProgress: number;
-    delayed: number;
-    notStarted: number;
+    completed?: number;
+    inProgress?: number;
+    delayed?: number;
+    notStarted?: number;
   };
 }
 
 const VerificationPanel = ({ votes }: VerificationPanelProps) => {
-  const total = votes.completed + votes.inProgress + votes.delayed + votes.notStarted;
+  const totals = {
+    completed: votes.completed ?? 0,
+    inProgress: votes.inProgress ?? 0,
+    delayed: votes.delayed ?? 0,
+    notStarted: votes.notStarted ?? 0,
+  };
+  const total = totals.completed + totals.inProgress + totals.delayed + totals.notStarted;
 
   const options = [
     {
       label: "Completed",
-      value: votes.completed,
+      value: totals.completed,
       icon: ThumbsUp,
       labelColor: "text-civic-green",
       valueColor: "text-civic-green",
     },
     {
       label: "In Progress",
-      value: votes.inProgress,
+      value: totals.inProgress,
       icon: Clock,
       labelColor: "text-accent",
       valueColor: "text-accent",
     },
     {
       label: "Delayed",
-      value: votes.delayed,
+      value: totals.delayed,
       icon: AlertTriangle,
       labelColor: "text-civic-amber",
       valueColor: "text-civic-green",
     },
     {
       label: "Not Started",
-      value: votes.notStarted,
+      value: totals.notStarted,
       icon: XCircle,
       labelColor: "text-destructive",
       valueColor: "text-destructive",

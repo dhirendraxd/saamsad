@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router";
 import type { Project } from "@/lib/api/contracts";
 import { useProjectsQuery } from "@/hooks/queries/useCivicQueries";
 

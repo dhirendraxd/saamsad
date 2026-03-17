@@ -1,5 +1,6 @@
+"use client";
+
 import { useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import VerificationPanel from "@/components/VerificationPanel";
 import EvidenceGallery from "@/components/EvidenceGallery";
@@ -8,6 +9,7 @@ import { getStatusColor, getStatusLabel } from "@/data/mockData";
 import { ArrowLeft, MapPin, Calendar, User, CheckCircle, Circle } from "lucide-react";
 import type { ActivityItem } from "@/components/ActivityFeed";
 import { useCommentsByProjectQuery, useProjectQuery } from "@/hooks/queries/useCivicQueries";
+import { useNavigate, useParams } from "@/lib/router";
 
 const ProjectDetail = () => {
   const { id } = useParams();

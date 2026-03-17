@@ -1,5 +1,6 @@
+"use client";
+
 import { type ElementType, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ProjectCard from "@/components/ProjectCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
@@ -8,6 +9,7 @@ import type { ActivityItem } from "@/components/ActivityFeed";
 import { User, MapPin, Shield, Settings, FolderOpen, Activity, Eye, Upload, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/useAuth";
+import { Navigate } from "@/lib/router";
 import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQueries";
 
 type Role = "citizen" | "politician";
@@ -29,7 +31,7 @@ const mockActivity: ActivityItem[] = [
 ];
 
 const AccountHub = () => {
-  const { session, isAuthenticated, role, signOut } = useAuth();
+  const { session, isAuthenticated, isReady, role, signOut } = useAuth();
   const { data: politicians = [] } = usePoliticiansQuery();
   const { data: projects = [], isLoading: isProjectsLoading } = useProjectsQuery();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -65,6 +67,15 @@ const AccountHub = () => {
 
   const visibleProjects =
     localProjects.length > 0 ? localProjects.slice(0, 6) : projects.slice(0, 4);
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container py-20 text-center text-muted-foreground">Loading account...</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !session) {
     return <Navigate to="/auth" replace />;

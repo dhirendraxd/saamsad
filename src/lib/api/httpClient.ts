@@ -1,5 +1,3 @@
-import { getSession } from "@/lib/auth/authService";
-
 const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 // Keep a stable base URL contract so mock adapters can be swapped for real APIs later.
@@ -23,7 +21,6 @@ export function getApiBaseUrl() {
 
 function buildHeaders(init?: RequestInit) {
   const headers = new Headers(init?.headers);
-  const session = getSession();
 
   if (!headers.has("Accept")) {
     headers.set("Accept", "application/json");
@@ -31,10 +28,6 @@ function buildHeaders(init?: RequestInit) {
 
   if (!(init?.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
-  }
-
-  if (session?.token && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${session.token}`);
   }
 
   return headers;

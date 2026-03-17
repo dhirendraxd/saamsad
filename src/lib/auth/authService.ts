@@ -69,10 +69,6 @@ function createSecureId(prefix?: string) {
   return prefix ? `${prefix}-${fallback}` : fallback;
 }
 
-function createSessionToken() {
-  return createSecureId();
-}
-
 function hasSessionExpired(session: AuthSession) {
   const expiresAt = Date.parse(session.expiresAt);
   if (!Number.isFinite(expiresAt)) {
@@ -125,7 +121,6 @@ export async function registerIdentity(input: IdentityRegistrationInput): Promis
 
   const session = authSessionSchema.parse({
     userId: roleResult.politicianId ?? createSecureId("citizen"),
-    token: createSessionToken(),
     role: roleResult.role,
     name: normalizedInput.name,
     ward: normalizedInput.ward,

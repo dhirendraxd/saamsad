@@ -5,15 +5,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth/AuthContext";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import ExplorePage from "./pages/Explore.tsx";
-import ProjectDetail from "./pages/ProjectDetail.tsx";
-import RegionExplorer from "./pages/RegionExplorer.tsx";
-import CivicEducation from "./pages/CivicEducation";
-import AccountHub from "./pages/AccountHub.tsx";
-import AuthPage from "./pages/Auth.tsx";
-import About from "./pages/About.tsx";
+import Index from "./views/Index";
+import NotFound from "./views/NotFound";
+import ExplorePage from "./views/Explore";
+import ProjectDetail from "./views/ProjectDetail";
+import RegionExplorer from "./views/RegionExplorer";
+import CivicEducation from "./views/CivicEducation";
+import AccountHub from "./views/AccountHub";
+import AuthPage from "./views/Auth";
+import About from "./views/About";
 
 const queryClient = new QueryClient();
 

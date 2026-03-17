@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import PoliticianCard from "@/components/PoliticianCard";

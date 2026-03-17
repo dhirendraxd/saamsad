@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import ProjectCard from "@/components/ProjectCard";

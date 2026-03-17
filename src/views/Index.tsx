@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
@@ -23,7 +25,7 @@ function getStoredHomepageVisitCount() {
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
-  const [homepageVisitCount, setHomepageVisitCount] = useState<number>(() => getStoredHomepageVisitCount());
+  const [homepageVisitCount, setHomepageVisitCount] = useState(0);
 
   useEffect(() => {
     const nextVisitCount = getStoredHomepageVisitCount() + 1;

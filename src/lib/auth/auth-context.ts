@@ -3,6 +3,7 @@ import type { AuthSession, IdentityRegistrationInput, UserRole } from "@/lib/api
 
 export interface AuthContextValue {
   session: AuthSession | null;
+  isReady: boolean;
   isAuthenticated: boolean;
   role: UserRole | null;
   signInWithIdentity: (input: IdentityRegistrationInput) => Promise<AuthSession>;

@@ -1,5 +1,8 @@
+"use client";
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import { resolveAssetSrc, type AssetSource } from "@/lib/asset";
 import { useEducationTopicsQuery } from "@/hooks/queries/useCivicQueries";
 import civicIllustration from "@/assets/civic-education-illustration.png";
 import federalismImg from "@/assets/fedeeralism new.jpg";
@@ -10,7 +13,7 @@ import electoralSystemImg from "@/assets/electoral system.jpg";
 const categories = ["All", "Local Governance", "Digital Rights", "Anti-Corruption", "Electoral System"];
 const titleAccentClasses = ["text-[#5B5BD6]", "text-[#F2A93B]", "text-[#2FB5C4]", "text-[#7A3A30]"];
 const courseActionLabels = ["Let's Explore", "Let's Learn", "Let's Start"];
-const courseImagesById: Record<string, string> = {
+const courseImagesById: Record<string, AssetSource> = {
   e1: federalismImg,
   e2: digitalRightsImg,
   e3: corruptionImg,
@@ -41,7 +44,7 @@ const CivicEducation = () => {
           </div>
           <div className="flex-shrink-0 md:w-64 lg:w-80">
             <img
-              src={civicIllustration}
+              src={resolveAssetSrc(civicIllustration)}
               alt="Diplomatic and political illustration"
               className="w-full opacity-90"
             />
@@ -79,7 +82,7 @@ const CivicEducation = () => {
                 <article key={topic.id} className="flex h-full w-full flex-col border border-[#e5e5e5] bg-white p-5">
                   <div className="mb-5 flex h-56 items-center justify-center sm:h-60 md:h-64 lg:h-56 xl:h-64">
                     <img
-                      src={cardImage}
+                      src={resolveAssetSrc(cardImage)}
                       alt={`${topic.title} course illustration`}
                       className="h-full w-full object-contain"
                       loading="lazy"
