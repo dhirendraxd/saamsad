@@ -1,11 +1,11 @@
-const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 // Keep a stable base URL contract so mock adapters can be swapped for real APIs later.
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/$/, "");
 
 function buildUrl(path: string) {
   if (!API_BASE_URL) {
-    throw new Error("VITE_API_BASE_URL is not configured.");
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured.");
   }
 
   return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;

@@ -12,7 +12,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@/lib/router": path.resolve(__dirname, "./src/lib/router-vite.tsx"),
+      "@/lib/router": path.resolve(__dirname, "./src/lib/router-test.tsx"),
       "@": path.resolve(__dirname, "./src"),
     },
   },

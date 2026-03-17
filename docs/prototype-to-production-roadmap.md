@@ -19,6 +19,10 @@ Move CivicLedger from static mock experience to production-ready civic infrastru
 
 ```text
 src/
+  app/
+    ...
+  views/
+    ...
   lib/
     api/
       contracts.ts
@@ -32,8 +36,6 @@ src/
   hooks/
     queries/
       useCivicQueries.ts
-  pages/
-    ...
   components/
     ...
 ```

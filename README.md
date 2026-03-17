@@ -4,12 +4,12 @@ CivicLedger is a civic accountability platform for tracking political promises, 
 
 ## Tech Stack
 
-- Vite
 - Next.js App Router
 - React 18
 - TypeScript
 - Tailwind CSS
 - TanStack Query
+- Vitest
 - Zod
 
 ## Getting Started
@@ -26,24 +26,13 @@ npm install
 npm run dev
 ```
 
-The Vite development server runs at `http://localhost:8080`.
-
-To run the parallel Next.js app-router setup:
-
-```sh
-npm run dev:next
-```
-
 The Next.js development server runs at `http://localhost:3000`.
 
 ## Available Scripts
 
-- `npm run dev`: start the Vite development server.
-- `npm run dev:next`: start the Next.js development server.
-- `npm run build`: create the Vite production build in `dist/`.
-- `npm run build:next`: create the Next.js production build.
-- `npm run preview`: serve the Vite production build locally.
-- `npm run start:next`: serve the Next.js production build locally.
+- `npm run dev`: start the Next.js development server.
+- `npm run build`: create the Next.js production build.
+- `npm run start`: serve the Next.js production build locally.
 - `npm run lint`: run ESLint checks.
 - `npm run test`: run Vitest test suite once.
 - `npm run test:watch`: run Vitest in watch mode.
@@ -58,6 +47,7 @@ The Next.js development server runs at `http://localhost:3000`.
 
 - The app currently runs in frontend-only mode using local mock data.
 - Queries read from `src/lib/api/civicApi.ts`, which is the single integration seam.
+- Real API mode should use `NEXT_PUBLIC_API_BASE_URL`.
 - When backend is ready, keep UI components unchanged and swap `civicApi` implementation to a real API adapter.
 
 ## Platform Direction
@@ -69,8 +59,8 @@ The Next.js development server runs at `http://localhost:3000`.
 ## Project Layout
 
 - `src/components`: reusable UI and feature components.
-- `src/views`: route-level screens for both Vite and Next.js app routes.
-- `src/app`: Next.js app-router entry files.
+- `src/views`: route-level screens consumed by App Router pages.
+- `src/app`: Next.js App Router entry files and shared providers.
 - `src/lib`: auth, API contracts, and utilities.
 - `src/hooks`: query and reusable React hooks.
 - `src/data`: mock data used by the prototype.
@@ -78,6 +68,5 @@ The Next.js development server runs at `http://localhost:3000`.
 ## Build Verification
 
 ```sh
-npm run lint
-npm run build
+npm run lint && npm run test && npm run build
 ```

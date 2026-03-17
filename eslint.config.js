@@ -36,7 +36,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["next.config.ts", "vite.config.ts"],
+    files: ["next.config.ts", "vitest.config.ts"],
     languageOptions: {
       globals: globals.node,
     },

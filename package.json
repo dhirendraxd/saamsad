@@ -4,14 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:next": "next dev --webpack --port 3000",
-    "build": "vite build",
-    "build:next": "next build --webpack",
-    "build:dev": "vite build --mode development",
+    "dev": "next dev --port 3000",
+    "build": "next build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "start:next": "next start",
+    "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest"
   },
