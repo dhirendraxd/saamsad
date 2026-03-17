@@ -1,10 +1,21 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { BookOpen, Clock } from "lucide-react";
 import { useEducationTopicsQuery } from "@/hooks/queries/useCivicQueries";
 import civicIllustration from "@/assets/civic-education-illustration.png";
+import federalismImg from "@/assets/fedeeralism new.jpg";
+import digitalRightsImg from "@/assets/digital new .jpg";
+import corruptionImg from "@/assets/corruption.jpg";
+import electoralSystemImg from "@/assets/electoral system.jpg";
 
 const categories = ["All", "Local Governance", "Digital Rights", "Anti-Corruption", "Electoral System"];
+const titleAccentClasses = ["text-[#5B5BD6]", "text-[#F2A93B]", "text-[#2FB5C4]", "text-[#7A3A30]"];
+const courseActionLabels = ["Let's Explore", "Let's Learn", "Let's Start"];
+const courseImagesById: Record<string, string> = {
+  e1: federalismImg,
+  e2: digitalRightsImg,
+  e3: corruptionImg,
+  e4: electoralSystemImg,
+};
 
 const CivicEducation = () => {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -58,22 +69,42 @@ const CivicEducation = () => {
         {isLoading ? (
           <div className="surface-line py-6 text-sm text-muted-foreground">Loading civic education topics...</div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((topic) => (
-              <div
-                key={topic.id}
-                className="surface-line cursor-pointer pt-6 transition-colors hover:border-accent/30 group"
-              >
-                <span className="text-3xl mb-4 block">{topic.icon}</span>
-                <span className="text-[10px] uppercase tracking-wider text-accent font-semibold">{topic.category}</span>
-                <h3 className="font-bold text-lg text-foreground mt-1 mb-2 group-hover:text-twitter-blue transition-colors">{topic.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{topic.description}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{topic.readTime}</span>
-                  <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" />Article</span>
-                </div>
-              </div>
-            ))}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {filtered.map((topic, index) => {
+              const [lead, ...rest] = topic.title.split(" ");
+              const cardImage = courseImagesById[topic.id] ?? civicIllustration;
+              const actionLabel = courseActionLabels[index % courseActionLabels.length];
+
+              return (
+                <article key={topic.id} className="flex h-full w-full flex-col border border-[#e5e5e5] bg-white p-5">
+                  <div className="mb-5 flex h-56 items-center justify-center sm:h-60 md:h-64 lg:h-56 xl:h-64">
+                    <img
+                      src={cardImage}
+                      alt={`${topic.title} course illustration`}
+                      className="h-full w-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  <h3 className="mb-2 min-h-[3.4rem] text-center text-[1.12rem] font-semibold leading-tight text-[#202020]">
+                    <span className="inline-block">
+                      <span className={titleAccentClasses[index % titleAccentClasses.length]}>{lead}</span>
+                      {rest.length > 0 ? <span className="text-[#202020]"> {rest.join(" ")}</span> : null}
+                    </span>
+                  </h3>
+
+                  <p className="mb-5 min-h-[3.6rem] text-center text-[13px] leading-6 text-[#6f6f6f]">{topic.description}</p>
+
+                  <button
+                    type="button"
+                    aria-label={`Open ${topic.title} course`}
+                    className="mt-auto w-full rounded-none border border-[#d9d9d9] bg-white py-2.5 text-[14px] font-semibold text-[#2b2b2b] transition-colors hover:border-[#bfbfbf] hover:text-[#1DA1F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1DA1F2]/35"
+                  >
+                    {actionLabel}
+                  </button>
+                </article>
+              );
+            })}
           </div>
         )}
       </div>

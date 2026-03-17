@@ -10,7 +10,7 @@ import NotFound from "./pages/NotFound.tsx";
 import ExplorePage from "./pages/Explore.tsx";
 import ProjectDetail from "./pages/ProjectDetail.tsx";
 import RegionExplorer from "./pages/RegionExplorer.tsx";
-import CivicEducation from "./pages/CivicEducation.tsx";
+import CivicEducation from "./pages/CivicEducation";
 import AccountHub from "./pages/AccountHub.tsx";
 import AuthPage from "./pages/Auth.tsx";
 import About from "./pages/About.tsx";
