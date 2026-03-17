@@ -35,8 +35,8 @@ const PoliticianCard = ({ politician, onClick }: PoliticianCardProps) => {
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-foreground truncate">{politician.name}</h3>
             {politician.verified && (
-              <span className="w-4 h-4 rounded-full bg-civic-green flex items-center justify-center flex-shrink-0">
-                <span className="text-[8px] text-civic-green-foreground">✓</span>
+              <span className="w-4 h-4 rounded-full bg-twitter-blue flex items-center justify-center flex-shrink-0">
+                <span className="text-[8px] text-white">✓</span>
               </span>
             )}
           </div>

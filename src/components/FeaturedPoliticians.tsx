@@ -114,7 +114,7 @@ const FeaturedPoliticians = ({ limit = 3, politiciansOverride }: FeaturedPolitic
                 <div className="mt-2 flex items-center gap-2">
                   <h3 className="text-lg font-bold text-foreground">{politician.name}</h3>
                   {politician.verified && (
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-civic-green text-[9px] text-civic-green-foreground">
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-twitter-blue text-[9px] text-white">
                       ✓
                     </span>
                   )}

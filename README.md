@@ -1,14 +1,14 @@
 # CivicLedger
 
-CivicLedger is a React + TypeScript web app for tracking political promises, monitoring project progress, and supporting community verification.
+CivicLedger is a civic accountability platform for tracking political promises, monitoring project progress, and supporting community verification.
 
 ## Tech Stack
 
 - Vite
+- Next.js App Router
 - React 18
 - TypeScript
 - Tailwind CSS
-- shadcn/ui
 - TanStack Query
 - Zod
 
@@ -59,6 +59,12 @@ The Next.js development server runs at `http://localhost:3000`.
 - The app currently runs in frontend-only mode using local mock data.
 - Queries read from `src/lib/api/civicApi.ts`, which is the single integration seam.
 - When backend is ready, keep UI components unchanged and swap `civicApi` implementation to a real API adapter.
+
+## Platform Direction
+
+- CivicLedger is maintained as a hand-built product surface, not a builder-generated template.
+- Template residue and unused scaffolding should be removed rather than carried forward.
+- Runtime UI should stay focused on the components the app actually renders today.
 
 ## Project Layout
 

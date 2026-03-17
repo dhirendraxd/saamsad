@@ -33,8 +33,8 @@ const PoliticianPanel = ({ politician, projects, onClose }: PoliticianPanelProps
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-extrabold text-foreground">{politician.name}</h3>
                 {politician.verified && (
-                  <span className="w-5 h-5 rounded-full bg-civic-green flex items-center justify-center">
-                    <span className="text-[10px] text-civic-green-foreground">✓</span>
+                  <span className="w-5 h-5 rounded-full bg-twitter-blue flex items-center justify-center">
+                    <span className="text-[10px] text-white">✓</span>
                   </span>
                 )}
               </div>
