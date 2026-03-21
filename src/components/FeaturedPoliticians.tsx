@@ -57,7 +57,7 @@ const FeaturedPoliticians = ({ limit = 3, politiciansOverride }: FeaturedPolitic
           <div>
             <p className="text-civic-slate font-semibold text-sm uppercase tracking-wider mb-2">Featured Politicians</p>
             <h2 className="text-3xl md:text-4xl font-extrabold text-foreground">
-              Top Accountability Leaders
+              Highest Accountability Scores
             </h2>
           </div>
           <Link

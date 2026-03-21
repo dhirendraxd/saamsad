@@ -203,7 +203,7 @@ const AuthPage = () => {
       <div className="relative hidden md:block md:w-1/2">
         <img
           src={resolveAssetSrc(loginImg)}
-          alt="Civic illustration"
+          alt="Samsad civic illustration"
           className="h-full w-full object-cover"
         />
       </div>

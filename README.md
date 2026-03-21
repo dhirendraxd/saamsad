@@ -1,6 +1,6 @@
-# CivicLedger
+# Samsad
 
-CivicLedger is a civic accountability platform for tracking political promises, monitoring project progress, and supporting community verification.
+Samsad is a civic accountability platform for tracking Nepal's political promises, monitoring project progress, and supporting community verification.
 
 ## Tech Stack
 
@@ -52,9 +52,9 @@ The Next.js development server runs at `http://localhost:3000`.
 
 ## Platform Direction
 
-- CivicLedger is maintained as a hand-built product surface, not a builder-generated template.
-- Template residue and unused scaffolding should be removed rather than carried forward.
-- Runtime UI should stay focused on the components the app actually renders today.
+- Samsad is maintained as a focused product, not a generic template.
+- Remove unused scaffolding instead of carrying it forward.
+- Keep the UI centered on the features users actually use.
 
 ## Project Layout
 

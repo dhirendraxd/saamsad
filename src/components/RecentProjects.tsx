@@ -27,7 +27,7 @@ const RecentProjects = () => {
           <div>
             <p className="text-civic-slate font-semibold text-sm uppercase tracking-wider mb-2">Recent Updates</p>
             <h2 className="text-3xl md:text-4xl font-extrabold text-foreground">
-              Projects in Motion
+              Latest Project Activity
             </h2>
           </div>
           <Link

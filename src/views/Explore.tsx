@@ -29,7 +29,7 @@ const ExplorePage = () => {
       <Navbar />
       <div className="container py-10">
         <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-2">Explore</h1>
-        <p className="text-muted-foreground mb-8">Discover politicians, track projects, and see who leads in transparency.</p>
+        <p className="text-muted-foreground mb-8">Browse public representatives, follow project progress, and check transparency scores.</p>
 
         {/* Tabs */}
         <div className="mb-8 flex w-fit gap-6 overflow-x-auto border-b border-border">
@@ -81,7 +81,7 @@ const ExplorePage = () => {
         {/* Transparency Leaders */}
         {activeTab === "Transparency Leaders" && (
           isPoliticiansLoading ? (
-            <div className="surface-line py-6 text-sm text-muted-foreground">Loading leader rankings...</div>
+            <div className="surface-line py-6 text-sm text-muted-foreground">Loading rankings...</div>
           ) : (
             <div className="space-y-3">
               {sortedByTransparency.map((politician, index) => (

@@ -1,19 +1,19 @@
 const features = [
   {
     title: "Promise Tracking",
-    description: "Turn manifestos into public projects with visible progress.",
+    description: "Turn manifesto promises into projects people can follow.",
   },
   {
     title: "Citizen Verification",
-    description: "Residents confirm status updates with evidence from the ground.",
+    description: "Residents confirm updates with photos and local reports.",
   },
   {
     title: "Transparency Records",
-    description: "Disclosures and reports stay visible in one public timeline.",
+    description: "Reports and disclosures stay in one simple public timeline.",
   },
   {
     title: "Civic Education",
-    description: "Simple learning paths explain institutions, rights, and process.",
+    description: "Short explainers cover Nepal's institutions and citizen rights.",
   },
 ];
 
@@ -24,7 +24,7 @@ const FeaturesSection = () => {
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-civic-slate">Platform Features</p>
           <h2 className="text-3xl font-extrabold text-foreground md:text-4xl">
-            Built for Clear Public Oversight
+            Built For Everyday Public Oversight
           </h2>
         </div>
 

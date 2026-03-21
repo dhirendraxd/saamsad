@@ -1,14 +1,14 @@
-# CivicLedger Context and Guidelines
+# Samsad Context and Guidelines
 
 ## Purpose of This File
-This document is the master product context for CivicLedger.
+This document is the main product context for Samsad.
 Use it as the source of truth for design, product decisions, and implementation direction.
 
 ## Platform Concept
-CivicLedger is a civic accountability and transparency platform where political promises are converted into trackable public records.
-Instead of relying on speeches and public memory, the platform uses structured data, timelines, and community verification.
+Samsad is a civic accountability and transparency platform where political promises are tracked as public records.
+Instead of relying on speeches and memory, the platform uses timelines, project data, and community verification.
 
-Core idea: governance as a ledger.
+Core idea: make governance records easy to follow.
 
 - Promises become entries.
 - Projects become timelines.
@@ -19,15 +19,15 @@ The platform is designed to solve three systemic problems.
 
 ### 1) Broken Memory Problem
 Election promises are often forgotten over time.
-CivicLedger stores promises permanently and maps them to trackable projects.
+Samsad stores promises and maps them to trackable projects.
 
 ### 2) Transparency Gap
 Citizens often cannot see what is happening in their area.
-CivicLedger provides live, structured visibility into local projects and progress.
+Samsad provides clear visibility into local projects and progress.
 
 ### 3) Civic Education Gap
 Many citizens want to participate but do not have practical civic literacy.
-CivicLedger includes a civic education hub to explain governance, rights, and institutions.
+Samsad includes a civic education hub to explain governance, rights, and institutions.
 
 ## Main Users
 
@@ -253,7 +253,7 @@ Team preference notes:
 - Hover accent can use subtle brown-red (`#7A3A30`) when needed.
 
 ## Long-Term Vision
-Evolve CivicLedger into a national transparency layer where voters can evaluate leaders using public, verifiable records.
+Grow Samsad into a trusted national transparency layer where voters can evaluate leaders using public records.
 
 Before elections, each profile should make it easy to inspect:
 - Promises made.

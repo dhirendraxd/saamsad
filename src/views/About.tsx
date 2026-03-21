@@ -9,7 +9,7 @@ const team = [
   {
     name: "Arjun Sharma",
     role: "Co-founder & CEO",
-    bio: "Former IAS officer turned civic-tech builder. Believes transparency is the foundation of democracy.",
+    bio: "Worked in local governance before building civic tech tools. Focused on practical transparency.",
     img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=700&fit=crop&crop=face",
     twitter: "https://twitter.com",
     linkedin: "https://linkedin.com",
@@ -17,7 +17,7 @@ const team = [
   {
     name: "Priya Nair",
     role: "Head of Policy Research",
-    bio: "Political scientist with 8 years studying Indian governance. Turns policy into plain language.",
+    bio: "Policy researcher focused on Nepal's federal system and public service delivery.",
     img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=700&fit=crop&crop=face",
     twitter: "https://twitter.com",
     linkedin: "https://linkedin.com",
@@ -25,7 +25,7 @@ const team = [
   {
     name: "Rohan Mehta",
     role: "Lead Engineer",
-    bio: "Full-stack engineer obsessed with data pipelines and making civic data accessible to everyone.",
+    bio: "Full-stack engineer working on reliable data flows and easy-to-use public dashboards.",
     img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=700&fit=crop&crop=face",
     twitter: "https://twitter.com",
     github: "https://github.com",
@@ -33,7 +33,7 @@ const team = [
   {
     name: "Sneha Patil",
     role: "Community Manager",
-    bio: "Grassroots organiser who has run voter literacy drives in 12 states.",
+    bio: "Community organizer involved in voter literacy and local civic workshops.",
     img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=700&fit=crop&crop=face",
     twitter: "https://twitter.com",
     linkedin: "https://linkedin.com",
@@ -41,7 +41,7 @@ const team = [
   {
     name: "Kabir Das",
     role: "Data & Transparency Lead",
-    bio: "RTI activist and data journalist. Built the promise-tracking model at the core of CivicLedger.",
+    bio: "RTI activist and data journalist helping shape how project promises are tracked.",
     img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=700&fit=crop&crop=face",
     twitter: "https://twitter.com",
     linkedin: "https://linkedin.com",
@@ -49,7 +49,7 @@ const team = [
   {
     name: "Meera Iyer",
     role: "UX & Product Design",
-    bio: "Designs civic interfaces that feel as natural as a conversation. Previously at ECI.",
+    bio: "Designs clear civic interfaces with experience from election-awareness campaigns in Nepal.",
     img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=700&fit=crop&crop=face",
     twitter: "https://twitter.com",
     linkedin: "https://linkedin.com",
@@ -69,22 +69,22 @@ const About = () => {
             {/* Left: mission + stats + cta */}
             <div className="md:w-72 shrink-0 md:sticky md:top-24">
               <span className="inline-block text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-4">
-                About CivicLedger
+                About Samsad
               </span>
               <h1 className="text-3xl md:text-[2.1rem] font-bold text-foreground leading-[1.2] tracking-tight mb-5">
                 Built to hold power<br />accountable.
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-                CivicLedger is an independent civic-tech platform tracking political promises,
-                government projects, and governance performance across every ward, municipality,
-                and constituency — so every citizen sees exactly what their representatives are doing.
+                Samsad is an independent civic-tech platform that tracks promises,
+                project progress, and governance performance across wards and municipalities in Nepal,
+                so people can quickly understand what is moving and what is stuck.
               </p>
 
               {/* Stats strip */}
               <div className="flex flex-col gap-4 border-t border-border pt-6 mb-8">
                 {[
                   ["1,200+", "Promises tracked"],
-                  ["28", "States covered"],
+                  ["7", "Provinces covered"],
                   ["4,000+", "Verified citizens"],
                 ].map(([num, label]) => (
                   <div key={label} className="flex items-baseline gap-3">

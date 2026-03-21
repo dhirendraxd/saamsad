@@ -7,7 +7,7 @@ import {
   type UserRole,
 } from "@/lib/api/contracts";
 
-export const SESSION_STORAGE_KEY = "civicledger.auth.session";
+export const SESSION_STORAGE_KEY = "samsad.auth.session";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
 
 function normalize(value: string) {

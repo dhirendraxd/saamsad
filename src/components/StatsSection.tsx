@@ -10,11 +10,10 @@ const StatsSection = () => {
       <div className="container py-16 md:py-24 space-y-12">
         <div className="grid md:grid-cols-2 gap-12 items-start">
           <h2 className="text-3xl md:text-4xl font-bold leading-tight text-foreground">
-            Public Accountability, Measured in Real Signals
+            See What Is Happening On The Ground
           </h2>
           <p className="text-muted-foreground leading-relaxed max-w-xl">
-            CivicLedger turns campaign promises into trackable records. These numbers reflect real project updates,
-            evidence uploads, and citizen verification activity across wards.
+            These numbers come from project updates, evidence uploads, and community checks across wards in Nepal.
           </p>
         </div>
 

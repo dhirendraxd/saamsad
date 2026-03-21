@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth/useAuth";
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Explore", href: "/explore" },
-  { label: "Regions", href: "/regions" },
+  { label: "Provinces", href: "/regions" },
   { label: "Education", href: "/education" },
   { label: "About", href: "/about" },
 ];
@@ -24,7 +24,7 @@ const Navbar = () => {
     <header className="bg-background">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="font-display text-xl font-semibold tracking-tight text-foreground">
-          CivicLedger
+          Samsad
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">

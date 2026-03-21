@@ -152,7 +152,7 @@ const AccountHub = () => {
               <div className="surface-line pt-6">
                 <h2 className="text-lg font-bold text-foreground mb-2">Citizen Account</h2>
                 <p className="text-sm text-muted-foreground">
-                  You are verified for {session.ward}. Use this hub to follow local projects, submit evidence, and participate in project verification.
+                  You are verified for {session.ward}. Use this page to follow local projects, upload evidence, and share status checks.
                 </p>
               </div>
             )}
@@ -197,7 +197,7 @@ const AccountHub = () => {
             <div className="flex justify-end">
               <Button variant="civic" size="sm"><Upload className="w-4 h-4 mr-1" />Upload Document</Button>
             </div>
-            {["Asset Declaration 2025", "Campaign Expenditure Report", "Policy Proposal: Clean Water"].map((doc) => (
+            {["Asset Declaration 2025", "Campaign Expense Report", "Policy Note: Clean Water"].map((doc) => (
               <div key={doc} className="surface-line flex items-center justify-between pt-4">
                 <div>
                   <p className="font-medium text-foreground">{doc}</p>

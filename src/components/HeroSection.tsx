@@ -21,14 +21,14 @@ const HeroSection = () => {
               </h1>
             </div>
             <p className="max-w-[28rem] text-base leading-relaxed text-muted-foreground md:text-[1.02rem]">
-              CivicLedger turns public promises into trackable projects with updates, evidence, and citizen review.
+              Samsad helps people in Nepal follow public promises through clear project updates, photos, and local feedback.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Button variant="civic" size="lg" className="rounded-none" asChild>
                 <Link to="/explore">Explore</Link>
               </Button>
               <Button variant="outline" size="lg" className="rounded-none" asChild>
-                <Link to="/regions">Regions</Link>
+                <Link to="/regions">Provinces</Link>
               </Button>
             </div>
           </div>
@@ -38,9 +38,11 @@ const HeroSection = () => {
             <div className="relative w-full max-w-[30rem] sm:max-w-[40rem] md:max-w-[61rem] md:-translate-y-2 lg:max-w-[75rem] lg:-translate-y-5 xl:max-w-[82rem]">
               <img
                 src={resolveAssetSrc(heroPrimary)}
-                alt="Civic participation illustration"
+                alt="Nepal civic participation illustration"
                 className="block w-full h-auto object-contain"
                 loading="eager"
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
           </div>

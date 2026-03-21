@@ -38,10 +38,10 @@ const RegionExplorer = () => {
       <div className="container py-10">
         <div className="flex items-center gap-2 text-accent mb-2">
           <MapPin className="w-5 h-5" />
-          <p className="font-semibold text-sm uppercase tracking-wider">Region Explorer</p>
+          <p className="font-semibold text-sm uppercase tracking-wider">Province Explorer</p>
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-2">Browse by Region</h1>
-        <p className="text-muted-foreground mb-8">Navigate through provinces, districts, municipalities, and wards.</p>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-2">Browse by Province</h1>
+        <p className="text-muted-foreground mb-8">Navigate through Nepal's provinces, districts, municipalities, and wards.</p>
 
         {/* Selectors */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
@@ -68,7 +68,7 @@ const RegionExplorer = () => {
 
         {(isRegionsLoading || isPoliticiansLoading || isProjectsLoading) && (
           <div className="surface-line mb-8 pt-4 text-sm text-muted-foreground">
-            Loading regional data...
+            Loading province data...
           </div>
         )}
 
@@ -129,7 +129,7 @@ const RegionExplorer = () => {
         {!ward && (
           <div className="text-center py-20 text-muted-foreground">
             <MapPin className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium">Select a region to explore</p>
+            <p className="text-lg font-medium">Select a province to explore</p>
             <p className="text-sm">Navigate through the dropdowns above to find your ward.</p>
           </div>
         )}

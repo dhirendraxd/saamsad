@@ -20,7 +20,7 @@ import {
   mockRegions,
 } from "@/data/mockData";
 
-const NETWORK_LATENCY_MS = 120;
+const NETWORK_LATENCY_MS = 35;
 
 function wait(ms = NETWORK_LATENCY_MS) {
   return new Promise((resolve) => setTimeout(resolve, ms));

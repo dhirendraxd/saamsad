@@ -36,17 +36,19 @@ const CivicEducation = () => {
           <div className="flex-1 max-w-2xl">
             <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">Civic Education Hub</p>
             <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">
-              Learn How Governance Works
+              Learn How Governance Works in Nepal
             </h1>
             <p className="text-muted-foreground">
-              A civic knowledge library designed to help every citizen understand democracy, governance, and their rights.
+              Short, practical guides to help citizens understand Nepal's governance system and constitutional rights.
             </p>
           </div>
           <div className="flex-shrink-0 md:w-64 lg:w-80">
             <img
               src={resolveAssetSrc(civicIllustration)}
-              alt="Diplomatic and political illustration"
+              alt="Nepal civic and governance illustration"
               className="w-full opacity-90"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </div>
@@ -70,7 +72,7 @@ const CivicEducation = () => {
 
         {/* Cards */}
         {isLoading ? (
-          <div className="surface-line py-6 text-sm text-muted-foreground">Loading civic education topics...</div>
+          <div className="surface-line py-6 text-sm text-muted-foreground">Loading education topics...</div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {filtered.map((topic, index) => {

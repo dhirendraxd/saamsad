@@ -11,7 +11,7 @@ const CtaSection = () => {
             Learn Governance Basics
           </h2>
           <p className="mx-auto mb-8 max-w-lg text-muted-foreground">
-            Short practical guides on institutions, rights, and public accountability.
+            Short practical guides on Nepal's institutions, rights, and public accountability.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button variant="civic" size="lg" className="rounded-none" asChild>

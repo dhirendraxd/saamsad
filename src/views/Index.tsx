@@ -10,7 +10,7 @@ import RecentProjects from "@/components/RecentProjects";
 import CtaSection from "@/components/CtaSection";
 import { useAuth } from "@/lib/auth/useAuth";
 
-const HOMEPAGE_VISIT_COUNT_STORAGE_KEY = "civic-ledger-homepage-visit-count";
+const HOMEPAGE_VISIT_COUNT_STORAGE_KEY = "samsad-homepage-visit-count";
 const FEATURED_POLITICIANS_MIN_VISITS = 3;
 
 function getStoredHomepageVisitCount() {
