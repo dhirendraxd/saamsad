@@ -1,19 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Image, { type StaticImageData } from "next/image";
 import Navbar from "@/components/Navbar";
-import { resolveAssetSrc, type AssetSource } from "@/lib/asset";
+import { getEducationTopicHref } from "@/lib/educationTopics";
 import { useEducationTopicsQuery } from "@/hooks/queries/useCivicQueries";
-import civicIllustration from "@/assets/civic-education-illustration.png";
-import federalismImg from "@/assets/fedeeralism new.jpg";
-import digitalRightsImg from "@/assets/digital new .jpg";
-import corruptionImg from "@/assets/corruption.jpg";
-import electoralSystemImg from "@/assets/electoral system.jpg";
+import civicIllustration from "@/assets/civic-education-illustration.webp";
+import federalismImg from "@/assets/fedeeralism new.webp";
+import digitalRightsImg from "@/assets/digital new .webp";
+import corruptionImg from "@/assets/corruption.webp";
+import electoralSystemImg from "@/assets/electoral system.webp";
 
 const categories = ["All", "Local Governance", "Digital Rights", "Anti-Corruption", "Electoral System"];
 const titleAccentClasses = ["text-[#5B5BD6]", "text-[#F2A93B]", "text-[#2FB5C4]", "text-[#7A3A30]"];
-const courseActionLabels = ["Let's Explore", "Let's Learn", "Let's Start"];
-const courseImagesById: Record<string, AssetSource> = {
+const courseImagesById: Record<string, StaticImageData> = {
   e1: federalismImg,
   e2: digitalRightsImg,
   e3: corruptionImg,
@@ -43,12 +44,11 @@ const CivicEducation = () => {
             </p>
           </div>
           <div className="flex-shrink-0 md:w-64 lg:w-80">
-            <img
-              src={resolveAssetSrc(civicIllustration)}
+            <Image
+              src={civicIllustration}
               alt="Nepal civic and governance illustration"
               className="w-full opacity-90"
-              loading="lazy"
-              decoding="async"
+              sizes="(min-width: 1024px) 20rem, 16rem"
             />
           </div>
         </div>
@@ -78,16 +78,16 @@ const CivicEducation = () => {
             {filtered.map((topic, index) => {
               const [lead, ...rest] = topic.title.split(" ");
               const cardImage = courseImagesById[topic.id] ?? civicIllustration;
-              const actionLabel = courseActionLabels[index % courseActionLabels.length];
+              const topicHref = getEducationTopicHref(topic.id);
 
               return (
                 <article key={topic.id} className="flex h-full w-full flex-col border border-[#e5e5e5] bg-white p-5">
                   <div className="mb-5 flex h-56 items-center justify-center sm:h-60 md:h-64 lg:h-56 xl:h-64">
-                    <img
-                      src={resolveAssetSrc(cardImage)}
+                    <Image
+                      src={cardImage}
                       alt={`${topic.title} course illustration`}
                       className="h-full w-full object-contain"
-                      loading="lazy"
+                      sizes="(min-width: 1280px) 16rem, (min-width: 1024px) 14rem, (min-width: 640px) 18rem, 100vw"
                     />
                   </div>
 
@@ -100,13 +100,13 @@ const CivicEducation = () => {
 
                   <p className="mb-5 min-h-[3.6rem] text-center text-[13px] leading-6 text-[#6f6f6f]">{topic.description}</p>
 
-                  <button
-                    type="button"
-                    aria-label={`Open ${topic.title} course`}
+                  <Link
+                    href={topicHref}
+                    aria-label={`Open ${topic.title} page`}
                     className="mt-auto w-full rounded-none border border-[#d9d9d9] bg-white py-2.5 text-[14px] font-semibold text-[#2b2b2b] transition-colors hover:border-[#bfbfbf] hover:text-[#1DA1F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1DA1F2]/35"
                   >
-                    {actionLabel}
-                  </button>
+                    Let's Explore
+                  </Link>
                 </article>
               );
             })}

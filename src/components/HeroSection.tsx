@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { resolveAssetSrc } from "@/lib/asset";
+import Image from "next/image";
 import { Link } from "@/lib/router";
-import heroPrimary from "@/assets/hero-illustration-primary.png";
+import heroPrimary from "@/assets/hero-illustration-primary.webp";
 
 const HeroSection = () => {
   return (
@@ -36,13 +36,12 @@ const HeroSection = () => {
           {/* Right — illustration */}
           <div className="relative z-0 flex justify-center md:justify-end md:-mr-14 lg:-mr-28 xl:-mr-36">
             <div className="relative w-full max-w-[30rem] sm:max-w-[40rem] md:max-w-[61rem] md:-translate-y-2 lg:max-w-[75rem] lg:-translate-y-5 xl:max-w-[82rem]">
-              <img
-                src={resolveAssetSrc(heroPrimary)}
+              <Image
+                src={heroPrimary}
                 alt="Nepal civic participation illustration"
-                className="block w-full h-auto object-contain"
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
+                className="block h-auto w-full object-contain"
+                priority
+                sizes="(min-width: 1280px) 82rem, (min-width: 1024px) 75rem, (min-width: 768px) 61rem, 40rem"
               />
             </div>
           </div>

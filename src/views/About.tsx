@@ -103,10 +103,10 @@ const About = () => {
             </div>
 
             {/* Right: staggered 3-column photo grid */}
-            <div className="flex-1 flex gap-8 items-start">
+            <div className="flex-1 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 md:items-start">
 
               {/* Column 1 — offset down */}
-              <div className="flex flex-col gap-10 flex-1 mt-14">
+              <div className="flex flex-col gap-10 md:mt-14">
                 {[team[0], team[3]].map((person) => (
                   <div key={person.name} className="group">
                     <div className="overflow-hidden">
@@ -143,7 +143,7 @@ const About = () => {
               </div>
 
               {/* Column 2 — starts at top */}
-              <div className="flex flex-col gap-10 flex-1">
+              <div className="flex flex-col gap-10">
                 {[team[1], team[4]].map((person) => (
                   <div key={person.name} className="group">
                     <div className="overflow-hidden">
@@ -180,7 +180,7 @@ const About = () => {
               </div>
 
               {/* Column 3 — slight offset */}
-              <div className="flex flex-col gap-10 flex-1 mt-8">
+              <div className="flex flex-col gap-10 md:mt-8">
                 {[team[2], team[5]].map((person) => (
                   <div key={person.name} className="group">
                     <div className="overflow-hidden">

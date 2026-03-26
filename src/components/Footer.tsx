@@ -1,6 +1,6 @@
 import { Link } from "@/lib/router";
-import { resolveAssetSrc } from "@/lib/asset";
-import civicIllustration from "@/assets/civic-education-illustration.png";
+import Image from "next/image";
+import civicIllustration from "@/assets/civic-education-illustration.webp";
 
 const Footer = () => {
   return (
@@ -25,12 +25,11 @@ const Footer = () => {
           </div>
           <div className="flex flex-col gap-3">
             <Link to="/education" className="block group">
-              <img
-                src={resolveAssetSrc(civicIllustration)}
+              <Image
+                src={civicIllustration}
                 alt="Nepal civic education illustration"
                 className="w-full max-w-[220px] opacity-80 group-hover:opacity-100 transition-opacity"
-                loading="lazy"
-                decoding="async"
+                sizes="220px"
               />
             </Link>
             <div>

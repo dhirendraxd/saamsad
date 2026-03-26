@@ -1,10 +1,10 @@
 "use client";
 
 import { type ChangeEvent, type FormEvent, useState } from "react";
+import Image from "next/image";
 import { Link, Navigate, useNavigate } from "@/lib/router";
-import { resolveAssetSrc } from "@/lib/asset";
 import { useAuth } from "@/lib/auth/useAuth";
-import loginImg from "@/assets/login.png";
+import loginImg from "@/assets/login.webp";
 
 interface IdentityFormState {
   nationalId: string;
@@ -73,7 +73,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white">
+    <div className="flex min-h-screen w-full overflow-y-auto bg-white md:h-screen md:overflow-hidden">
       {/* Top-left breadcrumb */}
       <nav className="absolute left-6 top-5 z-10 flex items-center gap-1.5 text-xs text-gray-400">
         <Link to="/" className="transition hover:text-gray-700">Home</Link>
@@ -84,7 +84,7 @@ const AuthPage = () => {
       </nav>
 
       {/* Left — form panel (50%) */}
-      <div className="flex w-full flex-col items-center justify-center px-8 md:w-1/2 md:px-16">
+      <div className="flex w-full flex-col items-center justify-center px-6 pb-10 pt-24 sm:px-8 md:w-1/2 md:px-16 md:py-0">
         <div className="w-full max-w-[380px]">
           <h1 id="identity-form-title" className="mb-3 text-center text-[1.6rem] font-semibold tracking-tight text-gray-900">
             Verify your identity
@@ -101,7 +101,7 @@ const AuthPage = () => {
 
               <div className="space-y-1.5">
                 <p className="block text-sm text-gray-700">Legal name</p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <div className="space-y-1">
                     <label className="block text-xs text-gray-600" htmlFor="firstName">First</label>
                     <input
@@ -201,10 +201,13 @@ const AuthPage = () => {
 
       {/* Right — image panel (50%) */}
       <div className="relative hidden md:block md:w-1/2">
-        <img
-          src={resolveAssetSrc(loginImg)}
+        <Image
+          src={loginImg}
           alt="Samsad civic illustration"
-          className="h-full w-full object-cover"
+          className="object-cover"
+          fill
+          sizes="50vw"
+          priority
         />
       </div>
     </div>
