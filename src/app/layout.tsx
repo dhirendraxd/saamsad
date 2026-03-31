@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppProviders } from "./providers";
-import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Samsad",
@@ -20,10 +19,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en-NP" suppressHydrationWarning>
       <body>
         <AppProviders>
-          <div className="min-h-screen flex flex-col">
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </div>
+          {children}
         </AppProviders>
       </body>
     </html>

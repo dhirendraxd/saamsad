@@ -35,6 +35,17 @@ import type { Project } from "@/lib/api/contracts";
 
 type Role = "citizen" | "politician";
 type Tab = "overview" | "projects" | "activity" | "transparency" | "settings";
+type FeedbackStatus = "new" | "reviewed" | "answered";
+
+interface CitizenFeedback {
+  id: string;
+  author: string;
+  projectTitle: string;
+  content: string;
+  date: string;
+  status: FeedbackStatus;
+  response?: string;
+}
 
 const DEMO_CITIZEN = {
   userId: "demo-citizen",
@@ -66,13 +77,49 @@ const tabs: { key: Tab; label: string; icon: ElementType }[] = [
   { key: "settings", label: "Settings", icon: Settings },
 ];
 
-const mockActivity: ActivityItem[] = [
+const mockCitizenActivity: ActivityItem[] = [
   { type: "verification", author: "You", content: "Verified 'Community Health Center' as In Progress", date: "2026-03-12" },
   { type: "comment", author: "You", content: "Left a comment on Rural Road Rehabilitation project", date: "2026-03-10" },
   { type: "evidence", author: "You", content: "Uploaded 2 photos for Women's Skill Training Center", date: "2026-03-08" },
   { type: "comment", author: "You", content: "Commented on Coastal Erosion Prevention project update", date: "2026-03-05" },
   { type: "verification", author: "Team", content: "Verified 'Road Widening' as Completed", date: "2026-02-28" },
   { type: "comment", author: "Analyst", content: "Flagged delay on Bridge Expansion", date: "2026-02-22" },
+];
+
+const mockPoliticianActivity: ActivityItem[] = [
+  { type: "update", author: "You", content: "Posted a 40% progress update for Ward 5 Community Clinic", date: "2026-03-13" },
+  { type: "comment", author: "Citizens", content: "14 new comments received on Water Pipeline Expansion", date: "2026-03-12" },
+  { type: "evidence", author: "You", content: "Uploaded campaign expense report and procurement note", date: "2026-03-10" },
+  { type: "update", author: "You", content: "Published manifesto promise: Improve school sanitation facilities", date: "2026-03-08" },
+  { type: "comment", author: "You", content: "Responded to 5 ward feedback threads", date: "2026-03-06" },
+];
+
+const initialCitizenFeedback: CitizenFeedback[] = [
+  {
+    id: "fb-1",
+    author: "Maya Shrestha",
+    projectTitle: "Ward 5 Community Clinic",
+    content: "Construction pace has slowed this month. Can we get an updated schedule?",
+    date: "2026-03-14",
+    status: "new",
+  },
+  {
+    id: "fb-2",
+    author: "Rabin Bista",
+    projectTitle: "Water Pipeline Expansion",
+    content: "Workers are active but one lane is blocked without safety signs.",
+    date: "2026-03-12",
+    status: "reviewed",
+  },
+  {
+    id: "fb-3",
+    author: "Sita Rai",
+    projectTitle: "Public School Digital Upgrade",
+    content: "Thank you for delivering laptops. Please share maintenance plan too.",
+    date: "2026-03-10",
+    status: "answered",
+    response: "Maintenance schedule will be published with vendor contacts this week.",
+  },
 ];
 
 const ProjectSkeleton = () => <div className="surface-line h-28 rounded-xl animate-pulse" aria-hidden="true" />;
@@ -86,22 +133,6 @@ const ErrorPanel = ({ message, onRetry }: { message: string; onRetry: () => void
   </div>
 );
 
-function SidebarLink({ icon: Icon, label, href, active, onClick }: { icon: ElementType; label: string; href?: string; active?: boolean; onClick?: () => void }) {
-  const Component = href ? Link : ("button" as any);
-  return (
-    <Component
-      to={href as string}
-      onClick={onClick}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2 transition text-sm font-medium ${
-        active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
-      }`}
-    >
-      <Icon className="h-4 w-4" />
-      {label}
-    </Component>
-  );
-}
-
 const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const { session, isAuthenticated, isReady, role, signOut } = useAuth();
   const location = useLocation();
@@ -112,12 +143,21 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const [createdProjects, setCreatedProjects] = useState<Project[]>([]);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [newProject, setNewProject] = useState({ title: "", category: "Infrastructure", expectedCompletion: "" });
+  const [newPromise, setNewPromise] = useState("");
+  const [manifestoPromises, setManifestoPromises] = useState<string[]>([
+    "Upgrade ward drinking water lines in high-density blocks.",
+    "Open one new primary health outreach center by year end.",
+    "Publish municipal procurement updates every quarter.",
+  ]);
+  const [projectUpdateForm, setProjectUpdateForm] = useState({ projectId: "", progress: "", note: "" });
   const [transparencyDocs, setTransparencyDocs] = useState([
     { title: "Asset Declaration 2025", uploaded: "Jan 2026", status: "Verified" },
     { title: "Campaign Expense Report", uploaded: "Jan 2026", status: "Verified" },
     { title: "Policy Note: Clean Water", uploaded: "Jan 2026", status: "Verified" },
   ]);
   const [newDocTitle, setNewDocTitle] = useState("");
+  const [citizenFeedback, setCitizenFeedback] = useState<CitizenFeedback[]>(initialCitizenFeedback);
+  const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, string>>({});
 
   const accountRole: Role = isAuthenticated ? (role === "politician" ? "politician" : "citizen") : targetRole ?? "citizen";
   const demoSession = accountRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
@@ -132,7 +172,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     );
   }, [accountRole, politicians, activeSession]);
 
-  const safeProjects = isProjectsError ? [] : projects;
+  const safeProjects = useMemo(() => (isProjectsError ? [] : projects), [isProjectsError, projects]);
   const allProjects = useMemo(() => [...createdProjects, ...safeProjects], [createdProjects, safeProjects]);
   const localProjects = useMemo(() => {
     if (!activeSession) return [];
@@ -140,6 +180,16 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     return allProjects.filter((project) => project.ward === activeSession.ward);
   }, [accountRole, politician, allProjects, activeSession]);
   const visibleProjects = localProjects.length > 0 ? localProjects.slice(0, 6) : allProjects.slice(0, 4);
+  const activityItems = accountRole === "politician" ? mockPoliticianActivity : mockCitizenActivity;
+  const answeredFeedback = citizenFeedback.filter((item) => item.status === "answered").length;
+  const pendingFeedback = citizenFeedback.filter((item) => item.status !== "answered").length;
+
+  const publicPerformance = {
+    publishedPromises: manifestoPromises.length,
+    activeProjects: localProjects.length,
+    transparencyDocs: transparencyDocs.length,
+    respondedFeedback: answeredFeedback,
+  };
 
   if (!isReady) return <div className="min-h-screen bg-neutral-100" aria-busy="true" />;
 
@@ -189,6 +239,62 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     setNewDocTitle("");
   };
 
+  const handleAddManifestoPromise = () => {
+    if (!newPromise.trim()) return;
+    setManifestoPromises((prev) => [newPromise.trim(), ...prev]);
+    setNewPromise("");
+  };
+
+  const handlePostProjectUpdate = () => {
+    if (!projectUpdateForm.projectId || !projectUpdateForm.note.trim()) return;
+
+    const progressValue = Math.min(100, Math.max(0, Number(projectUpdateForm.progress || 0)));
+    const now = new Date().toISOString();
+
+    setCreatedProjects((prev) =>
+      prev.map((project) => {
+        if (project.id !== projectUpdateForm.projectId) {
+          return project;
+        }
+
+        return {
+          ...project,
+          progress: progressValue,
+          status: progressValue >= 100 ? "completed" : progressValue > 0 ? "in-progress" : project.status,
+          updates: [
+            {
+              date: now,
+              content: projectUpdateForm.note.trim(),
+              type: progressValue >= 100 ? "completion" : "progress",
+            },
+            ...project.updates,
+          ],
+        };
+      }),
+    );
+
+    setProjectUpdateForm({ projectId: "", progress: "", note: "" });
+  };
+
+  const handleSubmitFeedbackResponse = (feedbackId: string) => {
+    const response = feedbackDrafts[feedbackId]?.trim();
+    if (!response) return;
+
+    setCitizenFeedback((prev) =>
+      prev.map((item) =>
+        item.id === feedbackId
+          ? {
+              ...item,
+              response,
+              status: "answered",
+            }
+          : item,
+      ),
+    );
+
+    setFeedbackDrafts((prev) => ({ ...prev, [feedbackId]: "" }));
+  };
+
   const handleSignOut = async () => {
     await signOut();
     setActiveTab("overview");
@@ -197,25 +303,86 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   return (
     <div className="min-h-screen bg-neutral-100">
       <div className="flex gap-6 px-4 py-6 lg:px-10">
-        <aside className="hidden lg:flex w-64 flex-col gap-6 rounded-2xl bg-white p-6 shadow-sm">
+        <aside className="hidden lg:flex w-64 min-h-[calc(100vh-48px)] flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm sticky top-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10" />
             <div>
               <p className="text-sm font-semibold text-foreground">Samsad</p>
-              <p className="text-xs text-muted-foreground">Transparency OS</p>
+              <p className="text-xs text-muted-foreground">Politician workspace</p>
             </div>
           </div>
-          <nav className="space-y-2 text-sm">
-            <SidebarLink icon={Home} label="Home" href="/" />
-            <SidebarLink icon={Users} label="Patients" href="/explore" />
-            <SidebarLink icon={Layers} label="Careboard" href="/dashboard" active />
-            <SidebarLink icon={BarChart2} label="Dashboard" href="/regions" />
-            <SidebarLink icon={Settings2} label="Automate" href="/education" />
-            <SidebarLink icon={Megaphone} label="Campaign" href="/project" />
-          </nav>
-          <div className="mt-auto space-y-3 text-sm">
-            <SidebarLink icon={Settings} label="Settings" href="/account" />
-            <SidebarLink icon={LogIn} label={isAuthenticated ? "Sign out" : "Sign in"} onClick={isAuthenticated ? handleSignOut : undefined} href={isAuthenticated ? undefined : "/auth"} />
+          <div className="space-y-2 text-sm">
+            {accountRole === "politician" ? (
+              <>
+                <Button
+                  variant="civic"
+                  size="sm"
+                  className="w-full justify-start gap-2 rounded-none"
+                  onClick={() => { setActiveTab("projects"); setShowProjectForm(true); }}
+                >
+                  <Layers className="h-4 w-4" />
+                  Update projects
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start gap-2 rounded-none"
+                  onClick={() => setActiveTab("transparency")}
+                >
+                  <Shield className="h-4 w-4" />
+                  Publish transparency
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="civic"
+                  size="sm"
+                  className="w-full justify-start gap-2 rounded-none"
+                  onClick={() => setActiveTab("projects")}
+                >
+                  <Layers className="h-4 w-4" />
+                  Follow projects
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start gap-2 rounded-none"
+                  onClick={() => setActiveTab("activity")}
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload evidence
+                </Button>
+              </>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2 rounded-none"
+              onClick={() => setActiveTab("activity")}
+            >
+              <Activity className="h-4 w-4" />
+              View recent activity
+            </Button>
+          </div>
+          <div className="mt-auto space-y-2 text-sm">
+            <Button variant="outline" size="sm" className="w-full justify-start gap-2 rounded-none" onClick={() => setActiveTab("settings")}>
+              <Settings className="h-4 w-4" />
+              Settings
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2 rounded-none"
+              onClick={isAuthenticated ? handleSignOut : undefined}
+              asChild={!isAuthenticated}
+            >
+              {isAuthenticated ? (
+                <span className="flex items-center gap-2"><LogIn className="h-4 w-4" />Sign out</span>
+              ) : (
+                <Link to="/auth" className="flex items-center gap-2"><LogIn className="h-4 w-4" />Sign in</Link>
+              )}
+            </Button>
           </div>
         </aside>
 
@@ -237,10 +404,10 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 rounded-full border border-border px-3 py-2 bg-white">
-                <Search className="w-4 h-4 text-muted-foreground" />
-                <input className="outline-none text-sm bg-transparent" placeholder="Search projects or updates" />
-              </div>
+            <div className="hidden md:flex items-center gap-2 rounded-full border border-border px-3 py-2 bg-white">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <input className="outline-none text-sm bg-transparent" placeholder="Search projects or updates" aria-label="Search projects or updates" />
+            </div>
               <Button variant="outline" size="sm" className="rounded-none">
                 <Bell className="w-4 h-4 mr-1" />
                 Alerts
@@ -248,44 +415,55 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
             </div>
           </div>
 
-          <div className="mt-6 flex items-center gap-3">
-            {"Tasks Timeline Pending Files".split(" ").map((label, idx) => (
-              <button
-                key={label}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium ${idx === 0 ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted"}`}
-                type="button"
-              >
-                {label}
-              </button>
-            ))}
-            <div className="ml-auto flex items-center gap-2">
-              <Button variant="outline" size="sm" className="rounded-none">Sort</Button>
-              <Button variant="outline" size="sm" className="rounded-none">Add filter</Button>
-            </div>
-          </div>
+          <div className="h-4" aria-hidden="true" />
 
           <div className="mt-4 flex flex-wrap gap-2 border-b border-border pb-2">
             {tabs
               .filter((tab) => (accountRole === "citizen" ? tab.key !== "transparency" : true))
-              .map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                    activeTab === tab.key ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+                .map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`rounded-none border-b px-3 py-1.5 text-sm font-medium ${
+                      activeTab === tab.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:border-border"
+                    }`}
+                    type="button"
+                  >
+                    {tab.label}
+                  </button>
+                ))}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1.75fr_1fr]">
+          <div className="grid gap-6 xl:grid-cols-[1.8fr_1fr]">
             <div className="space-y-6">
               {activeTab === "overview" && (
                 <div className="space-y-6">
                   {accountRole === "politician" && (
                     <>
+                      <div className="surface-line pt-6">
+                        <div className="flex items-center justify-between gap-3">
+                          <h2 className="text-lg font-bold text-foreground">Public Performance Summary</h2>
+                          <span className="text-xs uppercase tracking-[0.16em] text-civic-green">Publicly visible</span>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+                          <div className="border-t border-border pt-2">
+                            <p className="text-2xl font-extrabold text-foreground">{publicPerformance.publishedPromises}</p>
+                            <p className="text-xs text-muted-foreground">Promises Published</p>
+                          </div>
+                          <div className="border-t border-border pt-2">
+                            <p className="text-2xl font-extrabold text-foreground">{publicPerformance.activeProjects}</p>
+                            <p className="text-xs text-muted-foreground">Managed Projects</p>
+                          </div>
+                          <div className="border-t border-border pt-2">
+                            <p className="text-2xl font-extrabold text-foreground">{publicPerformance.transparencyDocs}</p>
+                            <p className="text-xs text-muted-foreground">Transparency Docs</p>
+                          </div>
+                          <div className="border-t border-border pt-2">
+                            <p className="text-2xl font-extrabold text-foreground">{publicPerformance.respondedFeedback}</p>
+                            <p className="text-xs text-muted-foreground">Feedback Answered</p>
+                          </div>
+                        </div>
+                      </div>
                       {isPoliticiansLoading && <StatSkeleton />}
                       {isPoliticiansError && <ErrorPanel message="Couldn't load your transparency stats. Please retry." onRetry={() => refetchPoliticians()} />}
                       {!isPoliticiansLoading && !isPoliticiansError && politician && (
@@ -346,12 +524,48 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               {activeTab === "projects" && (
                 <div className="space-y-4">
                   {accountRole === "politician" && (
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-muted-foreground">Draft and publish projects for your constituency.</p>
-                      <Button variant="civic" size="sm" onClick={() => setShowProjectForm((v) => !v)} className="rounded-none">
-                        <Plus className="w-4 h-4 mr-1" />
-                        {showProjectForm ? "Close form" : "Add Project"}
-                      </Button>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-muted-foreground">Create and manage development projects for your constituency.</p>
+                        <Button variant="civic" size="sm" onClick={() => setShowProjectForm((v) => !v)} className="rounded-none">
+                          <Plus className="w-4 h-4 mr-1" />
+                          {showProjectForm ? "Close form" : "Add Project"}
+                        </Button>
+                      </div>
+
+                      <div className="surface-line pt-4 space-y-3">
+                        <p className="text-sm font-medium text-foreground">Post progress update</p>
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <select
+                            className="field-line"
+                            value={projectUpdateForm.projectId}
+                            onChange={(event) => setProjectUpdateForm((prev) => ({ ...prev, projectId: event.target.value }))}
+                          >
+                            <option value="">Select project</option>
+                            {createdProjects.map((project) => (
+                              <option key={project.id} value={project.id}>{project.title}</option>
+                            ))}
+                          </select>
+                          <input
+                            className="field-line"
+                            type="number"
+                            min={0}
+                            max={100}
+                            placeholder="Progress %"
+                            value={projectUpdateForm.progress}
+                            onChange={(event) => setProjectUpdateForm((prev) => ({ ...prev, progress: event.target.value }))}
+                          />
+                          <Button variant="outline" size="sm" className="rounded-none" onClick={handlePostProjectUpdate}>
+                            Publish update
+                          </Button>
+                        </div>
+                        <textarea
+                          className="field-line min-h-20"
+                          placeholder="Write update details for citizens..."
+                          value={projectUpdateForm.note}
+                          onChange={(event) => setProjectUpdateForm((prev) => ({ ...prev, note: event.target.value }))}
+                        />
+                      </div>
                     </div>
                   )}
                   {showProjectForm && accountRole === "politician" && (
@@ -404,10 +618,75 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
               )}
 
-              {activeTab === "activity" && <ActivityFeed items={mockActivity} />}
+              {activeTab === "activity" && (
+                <div className="space-y-4">
+                  <ActivityFeed items={activityItems} />
+
+                  {accountRole === "politician" && (
+                    <div className="surface-line pt-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-foreground">Citizen Feedback Inbox</h3>
+                        <p className="text-xs text-muted-foreground">{pendingFeedback} pending response</p>
+                      </div>
+                      {citizenFeedback.map((item) => (
+                        <div key={item.id} className="border-t border-border pt-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold text-foreground">{item.author} · {item.projectTitle}</p>
+                            <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{item.status}</span>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">{item.content}</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">{item.date}</p>
+
+                          {item.response ? (
+                            <p className="mt-2 border-l border-civic-green pl-3 text-sm text-foreground">Response: {item.response}</p>
+                          ) : (
+                            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                              <input
+                                className="field-line flex-1"
+                                placeholder="Write your response"
+                                value={feedbackDrafts[item.id] ?? ""}
+                                onChange={(event) =>
+                                  setFeedbackDrafts((prev) => ({
+                                    ...prev,
+                                    [item.id]: event.target.value,
+                                  }))
+                                }
+                              />
+                              <Button variant="outline" size="sm" className="rounded-none" onClick={() => handleSubmitFeedbackResponse(item.id)}>
+                                Respond
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {activeTab === "transparency" && accountRole === "politician" && (
                 <div className="space-y-4">
+                  <div className="surface-line pt-4 space-y-3">
+                    <p className="text-sm font-medium text-foreground">Publish manifesto promise</p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <input
+                        className="field-line flex-1"
+                        placeholder="e.g., Complete all school sanitation retrofits by Q4"
+                        value={newPromise}
+                        onChange={(e) => setNewPromise(e.target.value)}
+                      />
+                      <Button variant="civic" size="sm" className="rounded-none" onClick={handleAddManifestoPromise}>
+                        <Megaphone className="w-4 h-4 mr-1" />
+                        Publish Promise
+                      </Button>
+                    </div>
+                    <div className="space-y-2 border-t border-border pt-3">
+                      {manifestoPromises.map((promise, index) => (
+                        <p key={`${promise}-${index}`} className="text-sm text-foreground">• {promise}</p>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="surface-line pt-4 space-y-3">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <input
@@ -460,7 +739,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               )}
             </div>
 
-            <div className="space-y-4 rounded-xl bg-neutral-50 p-4">
+            <div className="space-y-4 rounded-2xl bg-white/60 p-4 shadow-sm">
               <div className="rounded-lg border border-border bg-white p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-semibold text-foreground">Direct Messages</p>
@@ -477,7 +756,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               <div className="rounded-lg border border-border bg-white p-4">
                 <p className="text-sm font-semibold text-foreground mb-3">Activities</p>
                 <div className="space-y-3 text-sm text-muted-foreground">
-                  {mockActivity.slice(0, 6).map((item, idx) => (
+                  {activityItems.slice(0, 6).map((item, idx) => (
                     <div key={idx} className="flex gap-2">
                       <span
                         className={`mt-1 h-2.5 w-2.5 rounded-full ${
