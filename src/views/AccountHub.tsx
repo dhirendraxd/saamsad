@@ -6,10 +6,10 @@ import ProjectCard from "@/components/ProjectCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
 import ActivityFeed from "@/components/ActivityFeed";
 import type { ActivityItem } from "@/components/ActivityFeed";
-import { User, MapPin, Shield, Settings, FolderOpen, Activity, Eye, Upload, Plus } from "lucide-react";
+import { User, MapPin, Shield, Settings, FolderOpen, Activity, Eye, Upload, Plus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/useAuth";
-import { Navigate, useLocation } from "@/lib/router";
+import { Navigate, useLocation, Link } from "@/lib/router";
 import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQueries";
 
 type Role = "citizen" | "politician";
@@ -18,6 +18,28 @@ type Tab = "overview" | "projects" | "activity" | "transparency" | "settings";
 interface AccountHubProps {
   targetRole?: Role;
 }
+
+const DEMO_CITIZEN = {
+  userId: "demo-citizen",
+  role: "citizen" as const,
+  name: "Demo Citizen",
+  ward: "Ward 5",
+  municipality: "Kathmandu",
+  verified: false,
+  createdAt: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 6).toISOString(),
+};
+
+const DEMO_POLITICIAN = {
+  userId: "demo-politician",
+  role: "politician" as const,
+  name: "Demo Politician",
+  ward: "Ward 5",
+  municipality: "Kathmandu",
+  verified: true,
+  createdAt: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 6).toISOString(),
+};
 
 const tabs: { key: Tab; label: string; icon: ElementType }[] = [
   { key: "overview", label: "Overview", icon: Eye },
@@ -67,27 +89,34 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
   } = useProjectsQuery();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
-  const accountRole: Role = role === "politician" ? "politician" : "citizen";
+  const accountRole: Role = isAuthenticated
+    ? role === "politician"
+      ? "politician"
+      : "citizen"
+    : targetRole ?? "citizen";
+
+  const demoSession = accountRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
+  const activeSession = session ?? demoSession;
 
   const politician = useMemo(() => {
-    if (!session || accountRole !== "politician") {
+    if (!activeSession || accountRole !== "politician") {
       return null;
     }
 
     return (
-      politicians.find((candidate) => candidate.id === session.userId) ??
+      politicians.find((candidate) => candidate.id === activeSession.userId) ??
       politicians.find(
         (candidate) =>
-          candidate.name.trim().toLowerCase() === session.name.trim().toLowerCase(),
+          candidate.name.trim().toLowerCase() === activeSession.name.trim().toLowerCase(),
       ) ??
       null
     );
-  }, [accountRole, politicians, session]);
+  }, [accountRole, politicians, activeSession]);
 
   const safeProjects = isProjectsError ? [] : projects;
 
   const localProjects = useMemo(() => {
-    if (!session) {
+    if (!activeSession) {
       return [];
     }
 
@@ -95,8 +124,8 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
       return safeProjects.filter((project) => project.politicianId === politician.id);
     }
 
-    return safeProjects.filter((project) => project.ward === session.ward);
-  }, [accountRole, politician, safeProjects, session]);
+    return safeProjects.filter((project) => project.ward === activeSession.ward);
+  }, [accountRole, politician, safeProjects, activeSession]);
 
   const visibleProjects =
     localProjects.length > 0 ? localProjects.slice(0, 6) : safeProjects.slice(0, 4);
@@ -110,20 +139,19 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
     );
   }
 
-  if (!isAuthenticated || !session) {
-    return <Navigate to="/auth" replace />;
-  }
+  const demoSession = targetRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
+  const activeSession = session ?? demoSession;
 
   const dashboardRoute = accountRole === "politician" ? "/dashboard/politician" : "/dashboard/citizen";
   const isOnDashboard = location.pathname.startsWith("/dashboard");
   const isOnAccount = location.pathname === "/account";
   const isMismatchedDashboard = isOnDashboard && location.pathname !== dashboardRoute;
 
-  if (targetRole && targetRole !== accountRole) {
+  if (targetRole && targetRole !== accountRole && isAuthenticated) {
     return <Navigate to={dashboardRoute} replace />;
   }
 
-  if (isOnAccount || isMismatchedDashboard) {
+  if ((isOnAccount || isMismatchedDashboard) && isAuthenticated) {
     return <Navigate to={dashboardRoute} replace />;
   }
 
@@ -136,22 +164,28 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container py-10 space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{accountRole === "politician" ? "Politician Dashboard" : "Citizen Dashboard"}</p>
-            <h1 className="text-2xl font-bold text-foreground">
-              {accountRole === "politician" ? "Track promises and publish transparency updates" : "Follow local progress and keep leaders accountable"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {accountRole === "politician"
-                ? "See your portfolio, add documents, and keep your constituency informed."
-                : "See ward projects, upload evidence, and verify what’s happening on the ground."}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" className="rounded-none self-start" onClick={handleSignOut}>
-            Sign out
-          </Button>
-        </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{accountRole === "politician" ? "Politician Dashboard" : "Citizen Dashboard"}</p>
+                <h1 className="text-2xl font-bold text-foreground">
+                  {accountRole === "politician" ? "Track promises and publish transparency updates" : "Follow local progress and keep leaders accountable"}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {accountRole === "politician"
+                    ? "See your portfolio, add documents, and keep your constituency informed."
+                    : "See ward projects, upload evidence, and verify what’s happening on the ground."}
+                </p>
+              </div>
+              {isAuthenticated ? (
+                <Button variant="outline" size="sm" className="rounded-none self-start" onClick={handleSignOut}>
+                  Sign out
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="rounded-none self-start" asChild>
+                  <Link to="/auth"><LogIn className="w-4 h-4 mr-1" />Sign in</Link>
+                </Button>
+              )}
+            </div>
 
         <div className="surface-line mb-6 pt-6">
           <div className="flex items-start gap-4">
@@ -160,8 +194,8 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-extrabold text-foreground">{session.name}</h1>
-                {accountRole === "politician" && session.verified && (
+                <h1 className="text-xl font-extrabold text-foreground">{activeSession.name}</h1>
+                {accountRole === "politician" && activeSession.verified && (
                   <span className="w-5 h-5 rounded-full bg-civic-green flex items-center justify-center">
                     <span className="text-[10px] text-civic-green-foreground">✓</span>
                   </span>
@@ -172,7 +206,7 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
               </p>
               <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>{accountRole === "politician" ? politician?.constituency ?? session.ward : `${session.ward}, ${session.municipality}`}</span>
+                <span>{accountRole === "politician" ? politician?.constituency ?? activeSession.ward : `${activeSession.ward}, ${activeSession.municipality}`}</span>
               </div>
             </div>
           </div>
@@ -225,7 +259,7 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
               <div className="surface-line pt-6">
                 <h2 className="text-lg font-bold text-foreground mb-2">Citizen Account</h2>
                 <p className="text-sm text-muted-foreground">
-                  You are verified for {session.ward}. Use this page to follow local projects, upload evidence, and share status checks.
+                  You are verified for {activeSession.ward}. Use this page to follow local projects, upload evidence, and share status checks.
                 </p>
               </div>
             )}
@@ -235,7 +269,7 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
               </h2>
               {isProjectsLoading || isProjectsFetching ? (
                 <div className="grid sm:grid-cols-2 gap-4" aria-live="polite">
-                  {Array.from({ length: 4 }).map((_, idx) => <ProjectSkeleton key={idx} />)}
+                {Array.from({ length: 4 }).map((_, idx) => <ProjectSkeleton key={idx} />)}
                 </div>
               ) : isProjectsError ? (
                 <ErrorPanel

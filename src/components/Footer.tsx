@@ -16,6 +16,7 @@ const Footer = () => {
           <div>
             <p className="font-semibold text-sm text-foreground mb-3">Quick Links</p>
             <ul className="space-y-2">
+              <li><Link to="/" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Home</Link></li>
               <li><Link to="/explore" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Explore</Link></li>
               <li><Link to="/regions" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Provinces</Link></li>
               <li><Link to="/education" className="text-sm text-muted-foreground transition-colors hover:text-twitter-blue">Education</Link></li>

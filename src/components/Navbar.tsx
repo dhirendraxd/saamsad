@@ -11,7 +11,6 @@ const navLinks = [
   { label: "Explore", href: "/explore" },
   { label: "Provinces", href: "/regions" },
   { label: "Education", href: "/education" },
-  { label: "About", href: "/about" },
 ];
 
 const Navbar = () => {
@@ -23,6 +22,10 @@ const Navbar = () => {
   const authHref = isAuthenticated ? dashboardHref : "/auth";
   const authLabel = isAuthenticated ? "Dashboard" : "Join";
 
+  const filteredLinks = location.pathname === "/"
+    ? navLinks.filter((link) => !["Home", "Explore"].includes(link.label))
+    : navLinks;
+
   return (
     <header className="bg-background">
       <div className="container flex h-16 items-center justify-between">
@@ -31,7 +34,7 @@ const Navbar = () => {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
+          {filteredLinks.map((link) => (
             <Link
               key={link.label}
               to={link.href}

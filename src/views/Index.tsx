@@ -8,6 +8,7 @@ import FeaturesSection from "@/components/FeaturesSection";
 import FeaturedPoliticians from "@/components/FeaturedPoliticians";
 import RecentProjects from "@/components/RecentProjects";
 import CtaSection from "@/components/CtaSection";
+import Footer from "@/components/Footer";
 import { useAuth } from "@/lib/auth/useAuth";
 
 const HOMEPAGE_VISIT_COUNT_STORAGE_KEY = "samsad-homepage-visit-count";
@@ -49,6 +50,7 @@ const Index = () => {
         {isAuthenticated && <RecentProjects />}
         <CtaSection />
       </main>
+      <Footer />
     </div>
   );
 };
