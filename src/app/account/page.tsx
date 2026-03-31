@@ -1,5 +1,5 @@
-import AccountHubPage from "@/views/AccountHub";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <AccountHubPage />;
+  redirect("/dashboard");
 }

@@ -34,11 +34,37 @@ const mockActivity: ActivityItem[] = [
   { type: "comment", author: "You", content: "Commented on Coastal Erosion Prevention project update", date: "2026-03-05" },
 ];
 
+const ProjectSkeleton = () => (
+  <div className="surface-line h-28 rounded-xl animate-pulse" aria-hidden="true" />
+);
+
+const StatSkeleton = () => (
+  <div className="surface-line h-40 rounded-xl animate-pulse" aria-hidden="true" />
+);
+
+const ErrorPanel = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
+  <div className="surface-line flex items-center justify-between gap-3 pt-4" role="alert">
+    <p className="text-sm text-red-600">{message}</p>
+    <Button variant="outline" size="sm" className="rounded-none" onClick={onRetry}>Retry</Button>
+  </div>
+);
+
 const AccountHub = ({ targetRole }: AccountHubProps) => {
   const { session, isAuthenticated, isReady, role, signOut } = useAuth();
   const location = useLocation();
-  const { data: politicians = [] } = usePoliticiansQuery();
-  const { data: projects = [], isLoading: isProjectsLoading } = useProjectsQuery();
+  const {
+    data: politicians = [],
+    isLoading: isPoliticiansLoading,
+    isError: isPoliticiansError,
+    refetch: refetchPoliticians,
+  } = usePoliticiansQuery();
+  const {
+    data: projects = [],
+    isLoading: isProjectsLoading,
+    isError: isProjectsError,
+    isFetching: isProjectsFetching,
+    refetch: refetchProjects,
+  } = useProjectsQuery();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
   const accountRole: Role = role === "politician" ? "politician" : "citizen";
@@ -58,20 +84,22 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
     );
   }, [accountRole, politicians, session]);
 
+  const safeProjects = isProjectsError ? [] : projects;
+
   const localProjects = useMemo(() => {
     if (!session) {
       return [];
     }
 
     if (accountRole === "politician" && politician) {
-      return projects.filter((project) => project.politicianId === politician.id);
+      return safeProjects.filter((project) => project.politicianId === politician.id);
     }
 
-    return projects.filter((project) => project.ward === session.ward);
-  }, [accountRole, politician, projects, session]);
+    return safeProjects.filter((project) => project.ward === session.ward);
+  }, [accountRole, politician, safeProjects, session]);
 
   const visibleProjects =
-    localProjects.length > 0 ? localProjects.slice(0, 6) : projects.slice(0, 4);
+    localProjects.length > 0 ? localProjects.slice(0, 6) : safeProjects.slice(0, 4);
 
   if (!isReady) {
     return (
@@ -167,15 +195,31 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
 
         {activeTab === "overview" && (
           <div className="space-y-6">
-            {accountRole === "politician" && politician && (
-              <ScoreDashboard
-                accountability={politician.accountabilityScore}
-                transparency={politician.transparencyScore}
-                communityTrust={politician.communityTrust}
-                engagement={Math.min(politician.engagementPoints, 100)}
-                completedPromises={politician.completedPromises}
-                totalPromises={politician.totalPromises}
-              />
+            {accountRole === "politician" && (
+              <>
+                {isPoliticiansLoading && <StatSkeleton />}
+                {isPoliticiansError && (
+                  <ErrorPanel
+                    message="Couldn't load your transparency stats. Please retry."
+                    onRetry={() => refetchPoliticians()}
+                  />
+                )}
+                {!isPoliticiansLoading && !isPoliticiansError && politician && (
+                  <ScoreDashboard
+                    accountability={politician.accountabilityScore}
+                    transparency={politician.transparencyScore}
+                    communityTrust={politician.communityTrust}
+                    engagement={Math.min(politician.engagementPoints, 100)}
+                    completedPromises={politician.completedPromises}
+                    totalPromises={politician.totalPromises}
+                  />
+                )}
+                {!isPoliticiansLoading && !isPoliticiansError && !politician && (
+                  <div className="surface-line pt-6 text-sm text-muted-foreground">
+                    We couldn’t match your profile to a politician record yet.
+                  </div>
+                )}
+              </>
             )}
             {accountRole === "citizen" && (
               <div className="surface-line pt-6">
@@ -189,8 +233,15 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
               <h2 className="text-lg font-bold text-foreground mb-4">
                 {accountRole === "citizen" ? "Local Projects" : "Your Projects"}
               </h2>
-              {isProjectsLoading ? (
-                <div className="surface-line pt-4 text-sm text-muted-foreground">Loading projects...</div>
+              {isProjectsLoading || isProjectsFetching ? (
+                <div className="grid sm:grid-cols-2 gap-4" aria-live="polite">
+                  {Array.from({ length: 4 }).map((_, idx) => <ProjectSkeleton key={idx} />)}
+                </div>
+              ) : isProjectsError ? (
+                <ErrorPanel
+                  message="Projects failed to load. Check your connection and retry."
+                  onRetry={() => refetchProjects()}
+                />
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
@@ -207,8 +258,15 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
                 <Button variant="civic" size="sm"><Plus className="w-4 h-4 mr-1" />Add Project</Button>
               </div>
             )}
-            {isProjectsLoading ? (
-              <div className="surface-line pt-4 text-sm text-muted-foreground">Loading projects...</div>
+            {isProjectsLoading || isProjectsFetching ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, idx) => <ProjectSkeleton key={idx} />)}
+              </div>
+            ) : isProjectsError ? (
+              <ErrorPanel
+                message="Projects failed to load. Check your connection and retry."
+                onRetry={() => refetchProjects()}
+              />
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
