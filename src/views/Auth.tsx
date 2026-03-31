@@ -198,6 +198,25 @@ const AuthPage = () => {
               {isSubmitting ? "Verifying identity..." : "Continue to account"}
             </button>
           </form>
+
+          <div className="mt-5 space-y-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-600">Quick access</p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Link
+                to="/dashboard/citizen"
+                className="flex items-center justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-800 transition hover:border-gray-400 hover:bg-white"
+              >
+                Citizen dashboard
+              </Link>
+              <Link
+                to="/dashboard/politician"
+                className="flex items-center justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-800 transition hover:border-gray-400 hover:bg-white"
+              >
+                Politician dashboard
+              </Link>
+            </div>
+            <p className="text-[11px] text-gray-500">You can explore dashboards without signing in while we finalize the UI.</p>
+          </div>
         </div>
       </div>
 

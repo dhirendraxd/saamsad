@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/useAuth";
 import { Navigate, useLocation, Link } from "@/lib/router";
 import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQueries";
+import type { Project } from "@/lib/api/contracts";
 
 type Role = "citizen" | "politician";
 type Tab = "overview" | "projects" | "activity" | "transparency" | "settings";
@@ -88,6 +89,19 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
     refetch: refetchProjects,
   } = useProjectsQuery();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [createdProjects, setCreatedProjects] = useState<Project[]>([]);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [newProject, setNewProject] = useState({
+    title: "",
+    category: "Infrastructure",
+    expectedCompletion: "",
+  });
+  const [transparencyDocs, setTransparencyDocs] = useState([
+    { title: "Asset Declaration 2025", uploaded: "Jan 2026", status: "Verified" },
+    { title: "Campaign Expense Report", uploaded: "Jan 2026", status: "Verified" },
+    { title: "Policy Note: Clean Water", uploaded: "Jan 2026", status: "Verified" },
+  ]);
+  const [newDocTitle, setNewDocTitle] = useState("");
 
   const accountRole: Role = isAuthenticated
     ? role === "politician"
@@ -114,6 +128,10 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
   }, [accountRole, politicians, activeSession]);
 
   const safeProjects = isProjectsError ? [] : projects;
+  const allProjects = useMemo(
+    () => [...createdProjects, ...safeProjects],
+    [createdProjects, safeProjects],
+  );
 
   const localProjects = useMemo(() => {
     if (!activeSession) {
@@ -121,14 +139,14 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
     }
 
     if (accountRole === "politician" && politician) {
-      return safeProjects.filter((project) => project.politicianId === politician.id);
+      return allProjects.filter((project) => project.politicianId === politician.id);
     }
 
-    return safeProjects.filter((project) => project.ward === activeSession.ward);
-  }, [accountRole, politician, safeProjects, activeSession]);
+    return allProjects.filter((project) => project.ward === activeSession.ward);
+  }, [accountRole, politician, allProjects, activeSession]);
 
   const visibleProjects =
-    localProjects.length > 0 ? localProjects.slice(0, 6) : safeProjects.slice(0, 4);
+    localProjects.length > 0 ? localProjects.slice(0, 6) : allProjects.slice(0, 4);
 
   if (!isReady) {
     return (
@@ -138,9 +156,6 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
       </div>
     );
   }
-
-  const demoSession = targetRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
-  const activeSession = session ?? demoSession;
 
   const dashboardRoute = accountRole === "politician" ? "/dashboard/politician" : "/dashboard/citizen";
   const isOnDashboard = location.pathname.startsWith("/dashboard");
@@ -154,6 +169,65 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
   if ((isOnAccount || isMismatchedDashboard) && isAuthenticated) {
     return <Navigate to={dashboardRoute} replace />;
   }
+
+  const handleAddProject = () => {
+    if (!newProject.title.trim()) {
+      return;
+    }
+
+    const now = new Date();
+    const expected =
+      newProject.expectedCompletion && newProject.expectedCompletion.trim().length > 0
+        ? newProject.expectedCompletion
+        : new Date(now.getTime() + 1000 * 60 * 60 * 24 * 180).toISOString();
+
+    const project: Project = {
+      id: `local-${now.getTime()}`,
+      title: newProject.title.trim(),
+      description: `${newProject.title.trim()} — drafted by ${activeSession.name}`,
+      location: `${activeSession.ward}, ${activeSession.municipality}`,
+      ward: activeSession.ward,
+      politicianId: activeSession.userId,
+      politicianName: accountRole === "politician" ? politician?.name ?? activeSession.name : activeSession.name,
+      startDate: now.toISOString(),
+      expectedCompletion: expected,
+      status: "in-progress",
+      progress: 5,
+      category: newProject.category || "General",
+      evidenceCount: 0,
+      commentCount: 0,
+      verificationVotes: {
+        completed: 0,
+        inProgress: 0,
+        delayed: 0,
+        notStarted: 0,
+      },
+      milestones: [],
+      updates: [
+        {
+          date: now.toISOString(),
+          content: "Project drafted in dashboard (local only)",
+          type: "announcement",
+        },
+      ],
+    };
+
+    setCreatedProjects((prev) => [project, ...prev]);
+    setShowProjectForm(false);
+    setNewProject({ title: "", category: "Infrastructure", expectedCompletion: "" });
+    setActiveTab("projects");
+  };
+
+  const handleAddTransparencyDoc = () => {
+    if (!newDocTitle.trim()) {
+      return;
+    }
+    setTransparencyDocs((prev) => [
+      { title: newDocTitle.trim(), uploaded: "Just now", status: "Pending" },
+      ...prev,
+    ]);
+    setNewDocTitle("");
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -210,6 +284,60 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {accountRole === "politician" ? (
+            <>
+              <Button
+                variant="civic"
+                className="justify-start rounded-none"
+                onClick={() => {
+                  setActiveTab("projects");
+                  setShowProjectForm(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Draft a project
+              </Button>
+              <Button
+                variant="outline"
+                className="justify-start rounded-none"
+                onClick={() => setActiveTab("transparency")}
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                Manage transparency docs
+              </Button>
+              <Button
+                variant="outline"
+                className="justify-start rounded-none"
+                onClick={() => setActiveTab("activity")}
+              >
+                <Activity className="w-4 h-4 mr-1" />
+                View recent activity
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="civic"
+                className="justify-start rounded-none"
+                onClick={() => setActiveTab("projects")}
+              >
+                Follow local projects
+              </Button>
+              <Button asChild variant="outline" className="justify-start rounded-none">
+                <Link to="/project/local-upload">Upload evidence</Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="justify-start rounded-none"
+                onClick={() => setActiveTab("activity")}
+              >
+                Check your activity
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="mb-8 flex gap-6 overflow-x-auto border-b border-border">
@@ -289,7 +417,51 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
           <div>
             {accountRole === "politician" && (
               <div className="flex justify-end mb-4">
-                <Button variant="civic" size="sm"><Plus className="w-4 h-4 mr-1" />Add Project</Button>
+                <Button
+                  variant="civic"
+                  size="sm"
+                  onClick={() => setShowProjectForm((v) => !v)}
+                  className="rounded-none"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  {showProjectForm ? "Close form" : "Add Project"}
+                </Button>
+              </div>
+            )}
+            {showProjectForm && accountRole === "politician" && (
+              <div className="surface-line mb-4 space-y-3 pt-4">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <label className="sm:w-1/3 text-sm font-medium text-foreground">Title</label>
+                  <input
+                    className="field-line flex-1"
+                    placeholder="e.g., Ward 5 Community Clinic"
+                    value={newProject.title}
+                    onChange={(e) => setNewProject((p) => ({ ...p, title: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <label className="sm:w-1/3 text-sm font-medium text-foreground">Category</label>
+                  <input
+                    className="field-line flex-1"
+                    placeholder="Infrastructure, Health, Education..."
+                    value={newProject.category}
+                    onChange={(e) => setNewProject((p) => ({ ...p, category: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <label className="sm:w-1/3 text-sm font-medium text-foreground">Expected completion</label>
+                  <input
+                    className="field-line flex-1"
+                    type="date"
+                    value={newProject.expectedCompletion}
+                    onChange={(e) => setNewProject((p) => ({ ...p, expectedCompletion: e.target.value ? new Date(e.target.value).toISOString() : "" }))}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="civic" size="sm" className="rounded-none" onClick={handleAddProject}>
+                    Save project (local)
+                  </Button>
+                </div>
               </div>
             )}
             {isProjectsLoading || isProjectsFetching ? (
@@ -315,16 +487,28 @@ const AccountHub = ({ targetRole }: AccountHubProps) => {
 
         {activeTab === "transparency" && accountRole === "politician" && (
           <div className="space-y-4">
-            <div className="flex justify-end">
-              <Button variant="civic" size="sm"><Upload className="w-4 h-4 mr-1" />Upload Document</Button>
+            <div className="surface-line pt-4 space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  className="field-line flex-1"
+                  placeholder="e.g., FY 2026 Expense Report"
+                  value={newDocTitle}
+                  onChange={(e) => setNewDocTitle(e.target.value)}
+                />
+                <Button variant="civic" size="sm" className="rounded-none" onClick={handleAddTransparencyDoc}>
+                  <Upload className="w-4 h-4 mr-1" />
+                  Upload (local)
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Adds to your transparency list for demo purposes.</p>
             </div>
-            {["Asset Declaration 2025", "Campaign Expense Report", "Policy Note: Clean Water"].map((doc) => (
-              <div key={doc} className="surface-line flex items-center justify-between pt-4">
+            {transparencyDocs.map((doc) => (
+              <div key={doc.title} className="surface-line flex items-center justify-between pt-4">
                 <div>
-                  <p className="font-medium text-foreground">{doc}</p>
-                  <p className="text-xs text-muted-foreground">Uploaded Jan 2026</p>
+                  <p className="font-medium text-foreground">{doc.title}</p>
+                  <p className="text-xs text-muted-foreground">Uploaded {doc.uploaded}</p>
                 </div>
-                <span className="border-b border-civic-green/40 pb-0.5 text-xs font-medium text-civic-green">Verified</span>
+                <span className="border-b border-civic-green/40 pb-0.5 text-xs font-medium text-civic-green">{doc.status}</span>
               </div>
             ))}
           </div>
