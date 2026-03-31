@@ -9,11 +9,15 @@ import type { ActivityItem } from "@/components/ActivityFeed";
 import { User, MapPin, Shield, Settings, FolderOpen, Activity, Eye, Upload, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/useAuth";
-import { Navigate } from "@/lib/router";
+import { Navigate, useLocation } from "@/lib/router";
 import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQueries";
 
 type Role = "citizen" | "politician";
 type Tab = "overview" | "projects" | "activity" | "transparency" | "settings";
+
+interface AccountHubProps {
+  targetRole?: Role;
+}
 
 const tabs: { key: Tab; label: string; icon: ElementType }[] = [
   { key: "overview", label: "Overview", icon: Eye },
@@ -30,8 +34,9 @@ const mockActivity: ActivityItem[] = [
   { type: "comment", author: "You", content: "Commented on Coastal Erosion Prevention project update", date: "2026-03-05" },
 ];
 
-const AccountHub = () => {
+const AccountHub = ({ targetRole }: AccountHubProps) => {
   const { session, isAuthenticated, isReady, role, signOut } = useAuth();
+  const location = useLocation();
   const { data: politicians = [] } = usePoliticiansQuery();
   const { data: projects = [], isLoading: isProjectsLoading } = useProjectsQuery();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -81,6 +86,19 @@ const AccountHub = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  const dashboardRoute = accountRole === "politician" ? "/dashboard/politician" : "/dashboard/citizen";
+  const isOnDashboard = location.pathname.startsWith("/dashboard");
+  const isOnAccount = location.pathname === "/account";
+  const isMismatchedDashboard = isOnDashboard && location.pathname !== dashboardRoute;
+
+  if (targetRole && targetRole !== accountRole) {
+    return <Navigate to={dashboardRoute} replace />;
+  }
+
+  if (isOnAccount || isMismatchedDashboard) {
+    return <Navigate to={dashboardRoute} replace />;
+  }
+
   const handleSignOut = async () => {
     await signOut();
     setActiveTab("overview");
@@ -89,9 +107,20 @@ const AccountHub = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container py-10">
-        <div className="flex justify-end mb-6">
-          <Button variant="outline" size="sm" className="rounded-none" onClick={handleSignOut}>
+      <div className="container py-10 space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{accountRole === "politician" ? "Politician Dashboard" : "Citizen Dashboard"}</p>
+            <h1 className="text-2xl font-bold text-foreground">
+              {accountRole === "politician" ? "Track promises and publish transparency updates" : "Follow local progress and keep leaders accountable"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {accountRole === "politician"
+                ? "See your portfolio, add documents, and keep your constituency informed."
+                : "See ward projects, upload evidence, and verify what’s happening on the ground."}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-none self-start" onClick={handleSignOut}>
             Sign out
           </Button>
         </div>

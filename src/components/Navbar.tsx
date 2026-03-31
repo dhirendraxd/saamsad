@@ -17,10 +17,11 @@ const navLinks = [
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, role } = useAuth();
 
-  const authHref = isAuthenticated ? "/account" : "/auth";
-  const authLabel = isAuthenticated ? "Account" : "Join";
+  const dashboardHref = role === "politician" ? "/dashboard/politician" : "/dashboard/citizen";
+  const authHref = isAuthenticated ? dashboardHref : "/auth";
+  const authLabel = isAuthenticated ? "Dashboard" : "Join";
 
   return (
     <header className="bg-background">

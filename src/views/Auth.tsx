@@ -26,7 +26,7 @@ const ERROR_MESSAGE_ID = "identity-form-error";
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isReady, signInWithIdentity } = useAuth();
+  const { isAuthenticated, isReady, signInWithIdentity, role } = useAuth();
   const [formState, setFormState] = useState<IdentityFormState>(emptyFormState);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +45,8 @@ const AuthPage = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/account" replace />;
+    const dashboardRoute = role === "politician" ? "/dashboard/politician" : "/dashboard/citizen";
+    return <Navigate to={dashboardRoute} replace />;
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -58,13 +59,14 @@ const AuthPage = () => {
         .filter(Boolean)
         .join(" ");
 
-      await signInWithIdentity({
+      const session = await signInWithIdentity({
         nationalId: formState.nationalId.trim(),
         name: fullName,
         ward: "N/A",
         municipality: formState.municipality.trim(),
       });
-      navigate("/account", { replace: true });
+      const dashboardRoute = session.role === "politician" ? "/dashboard/politician" : "/dashboard/citizen";
+      navigate(dashboardRoute, { replace: true });
     } catch {
       setAuthError("Unable to verify this identity. Check the fields and try again.");
     } finally {
