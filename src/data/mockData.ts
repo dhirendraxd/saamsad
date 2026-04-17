@@ -80,7 +80,7 @@ export const mockPoliticians: Politician[] = [
   {
     id: "p1",
     name: "Sasmit Pokharel",
-    photo: "/images/reps/sasmit_pokharel_official.jpg",
+    photo: "/generated/politician-portrait.webp",
     party: "Rastriya Swatantra Party (RSP)",
     constituency: "Kathmandu 5",
     ward: "Kathmandu Constituency 5",
@@ -218,7 +218,7 @@ export const mockPoliticians: Politician[] = [
   {
     id: "p7",
     name: "Pradip Paudel",
-    photo: "/images/reps/pradip_paudel_nc.jpg",
+    photo: "/generated/past-politician.webp",
     party: "Nepali Congress",
     constituency: "Kathmandu 5",
     ward: "Kathmandu Constituency 5",
@@ -241,7 +241,7 @@ export const mockPoliticians: Politician[] = [
   {
     id: "p8",
     name: "Ishwar Pokharel",
-    photo: "/images/reps/ishwar_pokharel.jpg",
+    photo: "/generated/past-politician.webp",
     party: "CPN-UML",
     constituency: "Kathmandu 5",
     ward: "Kathmandu Constituency 5",
@@ -264,7 +264,7 @@ export const mockPoliticians: Politician[] = [
   {
     id: "p9",
     name: "Narahari Acharya",
-    photo: "/images/reps/narahari_acharya.jpg",
+    photo: "/generated/past-politician.webp",
     party: "Nepali Congress",
     constituency: "Kathmandu 5",
     ward: "Kathmandu Constituency 5",
@@ -653,9 +653,9 @@ export const getStatusColor = (status: Project["status"]) => {
 };
 
 const projectCoverImageById: Record<string, string> = {
-  proj1: "/images/projects/ktm5_digital_hub.jpg",
-  proj7: "/images/projects/ringroad_maharajgunj.jpg",
-  proj8: "/images/projects/ktm5_book_free_friday.jpg",
+  proj1: "/generated/project-drainage.webp",
+  proj7: "/generated/project-drainage.webp",
+  proj8: "/generated/project-water-kiosk.webp",
 };
 
 export const getProjectCoverImage = (projectId: string) => projectCoverImageById[projectId] ?? "";

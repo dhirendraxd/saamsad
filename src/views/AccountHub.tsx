@@ -12,12 +12,13 @@ import {
 import ProjectCard from "@/components/ProjectCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
 import ActivityFeed from "@/components/ActivityFeed";
+import PoliticianPanel from "@/components/PoliticianPanel";
 import type { ActivityItem } from "@/components/ActivityFeed";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/useAuth";
 import { Link, Navigate, useLocation, useNavigate } from "@/lib/router";
 import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQueries";
-import type { Project } from "@/lib/api/contracts";
+import type { Politician, Project } from "@/lib/api/contracts";
 import {
   addPoliticianPublicImage,
   addProjectComment,
@@ -70,6 +71,14 @@ const voteLabel: Record<VerificationVote, string> = {
 };
 
 const formatConstituencyLabel = (value: string) => value.replace(/^Ward\b/i, "Constituency");
+const firstSentence = (value: string) => {
+  const sentence = value
+    .split(".")
+    .map((part) => part.trim())
+    .find((part) => part.length > 0);
+
+  return sentence ? `${sentence}.` : "Representative record available.";
+};
 
 const ProjectSkeleton = () => <div className="surface-line h-28 rounded-xl animate-pulse" aria-hidden="true" />;
 
@@ -125,6 +134,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const [newDocTitle, setNewDocTitle] = useState("");
   const [publicImageCaption, setPublicImageCaption] = useState("");
   const [politicianPublicImages, setPoliticianPublicImages] = useState<ReturnType<typeof listPoliticianPublicImages>>([]);
+  const [selectedRepresentative, setSelectedRepresentative] = useState<Politician | null>(null);
 
   const accountRole: Role = isAuthenticated ? (role === "politician" ? "politician" : "citizen") : targetRole ?? "citizen";
   const demoSession = accountRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
@@ -698,7 +708,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
 
                 <div>
-                  <h2 className="mb-3 text-base font-bold text-primary">Kathmandu Constituency 5 Leadership Team</h2>
+                  <h2 className="mb-3 text-base font-bold text-primary">Current and Ward Representatives</h2>
+                  <p className="mb-3 text-xs text-muted-foreground">Profiles summarize publicly shared background, delivery metrics, and linked constituency projects.</p>
                   {isPoliticiansLoading ? (
                     <div className="flex justify-center">
                       <div className="w-full max-w-[280px]">
@@ -709,66 +720,82 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                     <ErrorPanel message="Politician profiles failed to load." onRetry={() => refetchPoliticians()} />
                   ) : wardChairperson ? (
                     <div className="grid gap-4 xl:grid-cols-[minmax(320px,1.5fr)_minmax(0,1fr)]">
-                      <div className="surface-line min-h-[360px] border-t-2 border-primary/40 pt-3">
+                      <div
+                        className="surface-line min-h-[360px] cursor-pointer border-t-2 border-primary/40 pt-3 transition-colors hover:border-primary/70"
+                        onClick={() => setSelectedRepresentative(wardChairperson)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedRepresentative(wardChairperson);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Open full profile for ${wardChairperson.name}`}
+                      >
                         <div className="relative h-72 w-full overflow-hidden border-b border-border/50 bg-neutral-100">
                           <img
                             src={wardChairperson.photo?.trim() || "/generated/politician-portrait.webp"}
                             alt={`${wardChairperson.name} profile`}
                             className="block h-full w-full object-cover object-center"
                             loading="lazy"
+                            onError={(event) => {
+                              event.currentTarget.src = "/generated/politician-portrait.webp";
+                            }}
                           />
                         </div>
                         <div className="p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Constituency Lead</p>
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Current Representative</p>
                           <p className="mt-1 text-base font-bold text-foreground">{wardChairperson.name}</p>
-                          <p className="mt-2 text-sm text-muted-foreground">Leads constituency-level representation, coordination, and local development priorities across Kathmandu 5.</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{wardChairperson.party}</p>
+                          <p className="mt-2 text-sm text-muted-foreground">{firstSentence(wardChairperson.manifesto)}</p>
+                          <p className="mt-2 text-[11px] font-semibold text-twitter-blue">View full profile</p>
                         </div>
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-2">
-                        {[
-                          {
-                            role: "Female Member",
-                            description: "Reserved constituency representation seat specifically for a woman.",
-                            accentClass: "text-accent",
-                            borderClass: "border-accent/40",
-                          },
-                          {
-                            role: "Dalit Female Member",
-                            description: "Reserved constituency representation seat for a woman from the Dalit community.",
-                            accentClass: "text-civic-amber",
-                            borderClass: "border-civic-amber/60",
-                          },
-                          {
-                            role: "Open Category Member",
-                            description: "Open category constituency seat for any eligible candidate.",
-                            accentClass: "text-twitter-blue",
-                            borderClass: "border-twitter-blue/40",
-                          },
-                          {
-                            role: "Open Category Member",
-                            description: "Open category constituency seat for any eligible candidate.",
-                            accentClass: "text-twitter-blue",
-                            borderClass: "border-twitter-blue/40",
-                          },
-                        ].map((memberRole, index) => {
-                          const assignedMember = wardCouncilMembers[index] ?? null;
-                          return (
-                            <div key={`${memberRole.role}-${index}`} className={`surface-line min-h-[210px] border-t-2 pt-2 ${memberRole.borderClass}`}>
+                        {wardCouncilMembers.length === 0 ? (
+                          <div className="surface-line min-h-[210px] border-t-2 border-border pt-2">
+                            <div className="p-3">
+                              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Ward Representatives</p>
+                              <p className="mt-2 text-sm text-muted-foreground">No ward representative records available yet.</p>
+                            </div>
+                          </div>
+                        ) : (
+                          wardCouncilMembers.map((member, index) => (
+                            <div
+                              key={member.id}
+                              className={`surface-line min-h-[210px] cursor-pointer border-t-2 pt-2 transition-colors hover:border-primary/60 ${index % 2 === 0 ? "border-accent/40" : "border-twitter-blue/40"}`}
+                              onClick={() => setSelectedRepresentative(member)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  setSelectedRepresentative(member);
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`Open full profile for ${member.name}`}
+                            >
                               <img
-                                src={assignedMember?.photo?.trim() || "/generated/past-politician.webp"}
-                                alt={`${assignedMember?.name ?? memberRole.role} profile`}
+                                src={member.photo?.trim() || "/generated/past-politician.webp"}
+                                alt={`${member.name} profile`}
                                 className="h-24 w-full object-cover"
                                 loading="lazy"
+                                onError={(event) => {
+                                  event.currentTarget.src = "/generated/past-politician.webp";
+                                }}
                               />
                               <div className="p-3">
-                                <p className={`text-[10px] font-semibold uppercase tracking-wide ${memberRole.accentClass}`}>{memberRole.role}</p>
-                                <p className="mt-1 text-sm font-bold text-foreground">{assignedMember?.name ?? "Reserved Seat"}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">{memberRole.description}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-accent">Ward {index + 1} Representative</p>
+                                <p className="mt-1 text-sm font-bold text-foreground">{member.name}</p>
+                                <p className="mt-1 text-[11px] text-muted-foreground">{member.party}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{firstSentence(member.manifesto)}</p>
+                                <p className="mt-2 text-[11px] font-semibold text-twitter-blue">View full profile</p>
                               </div>
                             </div>
-                          );
-                        })}
+                          ))
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -1085,6 +1112,14 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               <Button variant="civic" size="sm" className="rounded-none">Save Changes</Button>
             </div>
           </div>
+        )}
+
+        {selectedRepresentative && (
+          <PoliticianPanel
+            politician={selectedRepresentative}
+            projects={allProjects}
+            onClose={() => setSelectedRepresentative(null)}
+          />
         )}
       </div>
     </div>
