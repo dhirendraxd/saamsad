@@ -6,12 +6,17 @@ import { useNavigate } from "@/lib/router";
 
 interface ProjectCardProps {
   project: Project;
+  disableNavigation?: boolean;
 }
 
-const ProjectCard = ({ project }: ProjectCardProps) => {
+const ProjectCard = ({ project, disableNavigation = false }: ProjectCardProps) => {
   const navigate = useNavigate();
 
   const handleOpen = () => {
+    if (disableNavigation) {
+      return;
+    }
+
     navigate(`/project/${project.id}`);
   };
 
@@ -33,9 +38,13 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
     <div
       onClick={handleOpen}
       onKeyDown={handleKeyDown}
-      role="link"
+      role={disableNavigation ? "article" : "link"}
       tabIndex={0}
-      className="surface-line cursor-pointer pt-5 transition-colors hover:border-twitter-blue/50 hover:text-twitter-blue focus:outline-none focus:ring-0 focus:border-twitter-blue/50"
+      className={`surface-line pt-5 transition-colors focus:outline-none focus:ring-0 ${
+        disableNavigation
+          ? "cursor-default"
+          : "cursor-pointer hover:border-twitter-blue/50 hover:text-twitter-blue focus:border-twitter-blue/50"
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
