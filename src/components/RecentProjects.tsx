@@ -13,6 +13,8 @@ function getMostRecentActivityTimestamp(project: Project) {
   return mostRecentUpdate || (Number.isNaN(fallbackTimestamp) ? 0 : fallbackTimestamp);
 }
 
+const displayConstituency = (value: string) => value.replace(/^Ward\b/i, "Constituency");
+
 const RecentProjects = () => {
   const { data: projects = [], isLoading } = useProjectsQuery();
   const recent = useMemo(
@@ -46,7 +48,7 @@ const RecentProjects = () => {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {recent.map((project) => (
               <article key={project.id} className="surface-line pt-6">
-                <p className="text-xs uppercase tracking-[0.16em] text-civic-slate">{project.ward}</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-civic-slate">{displayConstituency(project.ward)}</p>
                 <h3 className="mt-2 text-lg font-bold text-foreground">{project.title}</h3>
                 <div className="my-3 h-px w-full bg-border" />
                 <p className="line-clamp-2 text-sm text-civic-slate">{project.description}</p>

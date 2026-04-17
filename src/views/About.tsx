@@ -76,7 +76,7 @@ const About = () => {
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                 Samsad is an independent civic-tech platform that tracks promises,
-                project progress, and governance performance across wards and municipalities in Nepal,
+                project progress, and governance performance across constituencies and municipalities in Nepal,
                 so people can quickly understand what is moving and what is stuck.
               </p>
 

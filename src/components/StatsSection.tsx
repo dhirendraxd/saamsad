@@ -13,7 +13,7 @@ const StatsSection = () => {
             See What Is Happening On The Ground
           </h2>
           <p className="text-muted-foreground leading-relaxed max-w-xl">
-            These numbers come from project updates, evidence uploads, and community checks across wards in Nepal.
+            These numbers come from project updates, evidence uploads, and community checks across constituencies in Nepal.
           </p>
         </div>
 

@@ -26,6 +26,8 @@ const colorMap = {
   verification: "bg-civic-amber/10 text-civic-amber",
 };
 
+const displayConstituency = (value: string) => value.replace(/^Ward\b/i, "Constituency");
+
 const ActivityFeed = ({ items }: ActivityFeedProps) => {
   return (
     <div className="space-y-3">
@@ -39,7 +41,7 @@ const ActivityFeed = ({ items }: ActivityFeedProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-semibold text-foreground">{item.author}</span>
-                {item.ward && <span className="text-[10px] text-muted-foreground">{item.ward}</span>}
+                {item.ward && <span className="text-[10px] text-muted-foreground">{displayConstituency(item.ward)}</span>}
               </div>
               <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{item.content}</p>
               <p className="text-[10px] text-muted-foreground mt-1">{item.date}</p>

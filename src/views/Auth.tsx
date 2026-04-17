@@ -171,13 +171,13 @@ const AuthPage = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-sm text-gray-700" htmlFor="ward">Ward</label>
+                <label className="block text-sm text-gray-700" htmlFor="ward">Constituency</label>
                 <input
                   id="ward"
                   type="text"
                   value={formState.ward}
                   onChange={handleChange("ward")}
-                  placeholder="Ward 5"
+                  placeholder="Kathmandu Constituency 5"
                   required
                   autoComplete="address-level3"
                   className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-gray-500 focus:ring-0"

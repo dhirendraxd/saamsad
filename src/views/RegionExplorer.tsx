@@ -29,6 +29,7 @@ const RegionExplorer = () => {
 
   const wardProjects = projects.filter((p) => (ward ? p.ward === ward : true));
   const wardPoliticians = politicians.filter((p) => (ward ? p.ward === ward : true));
+  const displayConstituency = (value: string) => value.replace(/^Ward\b/i, "Constituency");
 
   const selectClass = "field-line appearance-none";
 
@@ -41,7 +42,7 @@ const RegionExplorer = () => {
           <p className="font-semibold text-sm uppercase tracking-wider">Province Explorer</p>
         </div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-2">Browse by Province</h1>
-        <p className="text-muted-foreground mb-8">Navigate through Nepal's provinces, districts, municipalities, and wards.</p>
+        <p className="text-muted-foreground mb-8">Navigate through Nepal's provinces, districts, municipalities, and constituencies.</p>
 
         {/* Selectors */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
@@ -61,8 +62,8 @@ const RegionExplorer = () => {
           </select>
 
           <select className={selectClass} value={ward} onChange={(e) => setWard(e.target.value)} disabled={!municipality}>
-            <option value="">Select Ward</option>
-            {selectedMunicipality?.wards.map((w) => <option key={w} value={w}>{w}</option>)}
+            <option value="">Select Constituency</option>
+            {selectedMunicipality?.wards.map((w) => <option key={w} value={w}>{displayConstituency(w)}</option>)}
           </select>
         </div>
 
@@ -78,11 +79,11 @@ const RegionExplorer = () => {
             <span className="text-foreground font-medium">{province}</span>
             {district && <><ChevronRight className="w-3 h-3" /><span className="text-foreground font-medium">{district}</span></>}
             {municipality && <><ChevronRight className="w-3 h-3" /><span className="text-foreground font-medium">{municipality}</span></>}
-            {ward && <><ChevronRight className="w-3 h-3" /><span className="text-accent font-semibold">{ward}</span></>}
+            {ward && <><ChevronRight className="w-3 h-3" /><span className="text-accent font-semibold">{displayConstituency(ward)}</span></>}
           </div>
         )}
 
-        {/* Ward Overview */}
+        {/* Constituency Overview */}
         {ward && (
           <div className="space-y-10">
             <div className="grid sm:grid-cols-3 gap-4">
@@ -104,7 +105,7 @@ const RegionExplorer = () => {
 
             {wardPoliticians.length > 0 && (
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-4">Ward Politicians</h2>
+                <h2 className="text-xl font-bold text-foreground mb-4">Constituency Representatives</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {wardPoliticians.map((p) => (
                     <PoliticianCard key={p.id} politician={p} onClick={() => setSelectedPolitician(p)} />
@@ -115,7 +116,7 @@ const RegionExplorer = () => {
 
             {wardProjects.length > 0 && (
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-4">Ward Projects</h2>
+                <h2 className="text-xl font-bold text-foreground mb-4">Constituency Projects</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {wardProjects.map((p) => (
                     <ProjectCard key={p.id} project={p} />
@@ -130,7 +131,7 @@ const RegionExplorer = () => {
           <div className="text-center py-20 text-muted-foreground">
             <MapPin className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p className="text-lg font-medium">Select a province to explore</p>
-            <p className="text-sm">Navigate through the dropdowns above to find your ward.</p>
+            <p className="text-sm">Navigate through the dropdowns above to find your constituency.</p>
           </div>
         )}
       </div>

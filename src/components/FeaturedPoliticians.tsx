@@ -36,6 +36,8 @@ function toFeaturedPoliticianView(politician: Politician): FeaturedPoliticianVie
   };
 }
 
+const displayConstituency = (value: string) => value.replace(/^Ward\b/i, "Constituency");
+
 const FeaturedPoliticians = ({ limit = 3, politiciansOverride }: FeaturedPoliticiansProps) => {
   const { data: politicians = [], isLoading, isError, refetch } = usePoliticiansQuery();
   const hasOverride = Array.isArray(politiciansOverride);
@@ -108,7 +110,7 @@ const FeaturedPoliticians = ({ limit = 3, politiciansOverride }: FeaturedPolitic
             {featured.map((politician, index) => (
               <article key={politician.id} className="surface-line pt-6">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs uppercase tracking-[0.16em] text-civic-slate">{politician.ward}</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-civic-slate">{displayConstituency(politician.ward)}</p>
                   <span className="text-[10px] text-muted-foreground">#{index + 1}</span>
                 </div>
                 <div className="mt-2 flex items-center gap-2">

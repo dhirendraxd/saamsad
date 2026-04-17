@@ -10,7 +10,6 @@ import {
   User,
 } from "lucide-react";
 import ProjectCard from "@/components/ProjectCard";
-import PoliticianCard from "@/components/PoliticianCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
 import ActivityFeed from "@/components/ActivityFeed";
 import type { ActivityItem } from "@/components/ActivityFeed";
@@ -45,7 +44,7 @@ const DEMO_CITIZEN = {
   userId: "demo-citizen",
   role: "citizen" as const,
   name: "Demo Citizen",
-  ward: "Ward 5",
+  ward: "Kathmandu Constituency 5",
   municipality: "Kathmandu",
   verified: false,
   createdAt: new Date().toISOString(),
@@ -56,7 +55,7 @@ const DEMO_POLITICIAN = {
   userId: "demo-politician",
   role: "politician" as const,
   name: "Demo Politician",
-  ward: "Ward 5",
+  ward: "Kathmandu Constituency 5",
   municipality: "Kathmandu",
   verified: true,
   createdAt: new Date().toISOString(),
@@ -69,6 +68,8 @@ const voteLabel: Record<VerificationVote, string> = {
   delayed: "Delayed",
   "not-started": "Not Started",
 };
+
+const formatConstituencyLabel = (value: string) => value.replace(/^Ward\b/i, "Constituency");
 
 const ProjectSkeleton = () => <div className="surface-line h-28 rounded-xl animate-pulse" aria-hidden="true" />;
 
@@ -84,16 +85,9 @@ const ErrorPanel = ({ message, onRetry }: { message: string; onRetry: () => void
 const EmptyProjectSlot = () => (
   <div className="surface-line border-dashed border-accent/30 pt-5">
     <p className="text-sm font-semibold text-foreground">Project Slot Open</p>
-    <p className="mt-1 text-xs text-muted-foreground">No additional ongoing projects found in this ward yet.</p>
+    <p className="mt-1 text-xs text-muted-foreground">No additional ongoing projects found in this constituency yet.</p>
   </div>
 );
-
-const wardChairpersonServiceById: Record<string, string> = {
-  p7: "Former MP: 2074-2079 BS",
-  p8: "Former MP: 2079-2082 BS",
-  p9: "Earlier representative term",
-  p10: "Former Ward Representative (service period not verified)",
-};
 
 const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const { session, isAuthenticated, isReady, role, signOut } = useAuth();
@@ -135,6 +129,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const accountRole: Role = isAuthenticated ? (role === "politician" ? "politician" : "citizen") : targetRole ?? "citizen";
   const demoSession = accountRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
   const activeSession = session ?? demoSession;
+  const activeConstituency = formatConstituencyLabel(activeSession.ward);
 
   useEffect(() => {
     setIssues(listIssuesByWard(activeSession.ward));
@@ -148,9 +143,9 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
       return;
     }
 
-    const politicianId = politician?.id ?? activeSession.userId;
+    const politicianId = activeSession.userId;
     setPoliticianPublicImages(listPoliticianPublicImages(politicianId));
-  }, [accountRole, activeSession.userId, politician?.id]);
+  }, [accountRole, activeSession.userId]);
 
   const politician = useMemo(() => {
     if (accountRole !== "politician") return null;
@@ -182,23 +177,10 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     })[0];
   }, [localPoliticians]);
 
-  const wardPastRepresentatives = useMemo(() => {
-    if (localPoliticians.length === 0) return [];
-
-    return [...localPoliticians]
-      .sort((left, right) => {
-        if (right.accountabilityScore !== left.accountabilityScore) {
-          return right.accountabilityScore - left.accountabilityScore;
-        }
-
-        if (right.activeProjects !== left.activeProjects) {
-          return right.activeProjects - left.activeProjects;
-        }
-
-        return right.communityTrust - left.communityTrust;
-      })
-      .slice(1, 3);
-  }, [localPoliticians]);
+  const wardCouncilMembers = useMemo(() => {
+    if (!wardChairperson) return [];
+    return localPoliticians.filter((candidate) => candidate.id !== wardChairperson.id).slice(0, 4);
+  }, [localPoliticians, wardChairperson]);
 
   const safeProjects = useMemo(() => (isProjectsError ? [] : projects), [isProjectsError, projects]);
   const allProjects = useMemo(() => [...createdProjects, ...safeProjects], [createdProjects, safeProjects]);
@@ -348,7 +330,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     pushNotification({
       userId: activeSession.userId,
       title: "Issue submitted",
-      message: "Your issue has been published to your ward inbox.",
+      message: "Your issue has been published to your constituency inbox.",
     });
 
     setIssueForm({ title: "", description: "", location: "", category: "Infrastructure" });
@@ -604,10 +586,6 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     navigate(`/project/${project.id}`);
   };
 
-  const handleOverviewPoliticianNavigate = (politicianId: string) => {
-    navigate(`/politician/${politicianId}`);
-  };
-
   const handleSignOut = async () => {
     await signOut();
     setActiveTab("overview");
@@ -628,7 +606,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               </h1>
               <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
-                {activeSession.ward}, {activeSession.municipality}
+                {activeConstituency}, {activeSession.municipality}
               </p>
             </div>
           </div>
@@ -702,11 +680,11 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               <>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-primary">Ward</p>
-                    <p className="mt-1 text-lg font-bold text-foreground">{activeSession.ward}</p>
+                    <p className="text-xs uppercase text-primary">Constituency</p>
+                    <p className="mt-1 text-lg font-bold text-foreground">{activeConstituency}</p>
                   </div>
                   <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-accent">Local Politicians till now</p>
+                    <p className="text-xs uppercase text-accent">Constituency Representatives</p>
                     <p className="mt-1 text-lg font-bold text-foreground">{localPoliticians.length}</p>
                   </div>
                   <div className="surface-line pt-4">
@@ -720,7 +698,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
 
                 <div>
-                  <h2 className="mb-3 text-base font-bold text-primary">Ward Chairperson</h2>
+                  <h2 className="mb-3 text-base font-bold text-primary">Kathmandu Constituency 5 Leadership Team</h2>
                   {isPoliticiansLoading ? (
                     <div className="flex justify-center">
                       <div className="w-full max-w-[280px]">
@@ -730,29 +708,72 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                   ) : isPoliticiansError ? (
                     <ErrorPanel message="Politician profiles failed to load." onRetry={() => refetchPoliticians()} />
                   ) : wardChairperson ? (
-                    <div className="grid gap-6 lg:grid-cols-3">
-                      <div className="w-full">
-                        <PoliticianCard
-                          politician={wardChairperson}
-                          onClick={() => handleOverviewPoliticianNavigate(wardChairperson.id)}
-                        />
-                      </div>
-
-                      {wardPastRepresentatives.map((representative) => (
-                        <div key={representative.id} className="w-full">
-                          <PoliticianCard
-                            politician={representative}
-                            grayscalePhoto
-                            fadedText
-                            hoverLabel={wardChairpersonServiceById[representative.id] ?? "Former Ward Chairperson"}
-                            onClick={() => handleOverviewPoliticianNavigate(representative.id)}
+                    <div className="grid gap-4 xl:grid-cols-[minmax(320px,1.5fr)_minmax(0,1fr)]">
+                      <div className="surface-line min-h-[360px] border-t-2 border-primary/40 pt-3">
+                        <div className="relative h-72 w-full overflow-hidden border-b border-border/50 bg-neutral-100">
+                          <img
+                            src={wardChairperson.photo?.trim() || "/generated/politician-portrait.webp"}
+                            alt={`${wardChairperson.name} profile`}
+                            className="block h-full w-full object-cover object-center"
+                            loading="lazy"
                           />
                         </div>
-                      ))}
+                        <div className="p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Constituency Lead</p>
+                          <p className="mt-1 text-base font-bold text-foreground">{wardChairperson.name}</p>
+                          <p className="mt-2 text-sm text-muted-foreground">Leads constituency-level representation, coordination, and local development priorities across Kathmandu 5.</p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {[
+                          {
+                            role: "Female Member",
+                            description: "Reserved constituency representation seat specifically for a woman.",
+                            accentClass: "text-accent",
+                            borderClass: "border-accent/40",
+                          },
+                          {
+                            role: "Dalit Female Member",
+                            description: "Reserved constituency representation seat for a woman from the Dalit community.",
+                            accentClass: "text-civic-amber",
+                            borderClass: "border-civic-amber/60",
+                          },
+                          {
+                            role: "Open Category Member",
+                            description: "Open category constituency seat for any eligible candidate.",
+                            accentClass: "text-twitter-blue",
+                            borderClass: "border-twitter-blue/40",
+                          },
+                          {
+                            role: "Open Category Member",
+                            description: "Open category constituency seat for any eligible candidate.",
+                            accentClass: "text-twitter-blue",
+                            borderClass: "border-twitter-blue/40",
+                          },
+                        ].map((memberRole, index) => {
+                          const assignedMember = wardCouncilMembers[index] ?? null;
+                          return (
+                            <div key={`${memberRole.role}-${index}`} className={`surface-line min-h-[210px] border-t-2 pt-2 ${memberRole.borderClass}`}>
+                              <img
+                                src={assignedMember?.photo?.trim() || "/generated/past-politician.webp"}
+                                alt={`${assignedMember?.name ?? memberRole.role} profile`}
+                                className="h-24 w-full object-cover"
+                                loading="lazy"
+                              />
+                              <div className="p-3">
+                                <p className={`text-[10px] font-semibold uppercase tracking-wide ${memberRole.accentClass}`}>{memberRole.role}</p>
+                                <p className="mt-1 text-sm font-bold text-foreground">{assignedMember?.name ?? "Reserved Seat"}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{memberRole.description}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
                     <div className="surface-line pt-4 text-sm text-muted-foreground">
-                      No chairperson found for this ward yet.
+                      No constituency lead found for Kathmandu 5 yet.
                     </div>
                   )}
                 </div>
@@ -870,8 +891,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
                 <div className="space-y-4">
                   <div className="surface-line pt-5">
-                    <h2 className="text-base font-bold text-foreground">Projects in Your Ward</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">Select a project to verify it or leave a comment. The list stays local to your ward by default.</p>
+                    <h2 className="text-base font-bold text-foreground">Projects in Kathmandu Constituency 5</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">Select a project to verify it or leave a comment. The list stays local to the constituency by default.</p>
                   </div>
                   {isProjectsLoading || isProjectsFetching ? (
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -1031,7 +1052,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                     )}
                   </div>
                 ))}
-                {issues.length === 0 && <p className="text-sm text-muted-foreground">No ward issues reported yet.</p>}
+                {issues.length === 0 && <p className="text-sm text-muted-foreground">No constituency issues reported yet.</p>}
               </div>
             )}
           </div>
@@ -1060,7 +1081,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
             <h2 className="text-base font-bold text-foreground">Profile Settings</h2>
             <div className="mt-3 space-y-3">
               <input className="field-line" placeholder={activeSession.name} />
-              <input className="field-line" placeholder={activeSession.ward} />
+              <input className="field-line" placeholder={activeConstituency} />
               <Button variant="civic" size="sm" className="rounded-none">Save Changes</Button>
             </div>
           </div>
