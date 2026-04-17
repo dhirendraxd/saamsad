@@ -71,12 +71,23 @@ export interface NotificationItem {
   createdAt: string;
 }
 
+export interface PoliticianPublicImage {
+  id: string;
+  politicianId: string;
+  authorId: string;
+  authorName: string;
+  imageDataUrl: string;
+  caption?: string;
+  createdAt: string;
+}
+
 interface ParticipationStore {
   issues: IssueReport[];
   verifications: ProjectVerification[];
   comments: LocalProjectComment[];
   activity: ActivityEvent[];
   notifications: NotificationItem[];
+  politicianImages: PoliticianPublicImage[];
 }
 
 const STORAGE_KEY = "civic-participation-v1";
@@ -87,6 +98,7 @@ const EMPTY_STORE: ParticipationStore = {
   comments: [],
   activity: [],
   notifications: [],
+  politicianImages: [],
 };
 
 function hasWindow() {
@@ -106,6 +118,7 @@ function safeParse(raw: string | null): ParticipationStore {
       comments: Array.isArray(parsed.comments) ? parsed.comments : [],
       activity: Array.isArray(parsed.activity) ? parsed.activity : [],
       notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
+      politicianImages: Array.isArray(parsed.politicianImages) ? parsed.politicianImages : [],
     };
   } catch {
     return EMPTY_STORE;
@@ -366,4 +379,37 @@ export function markAllNotificationsRead(userId: string): void {
     ...store,
     notifications: nextNotifications,
   });
+}
+
+export function listPoliticianPublicImages(politicianId: string): PoliticianPublicImage[] {
+  return readStore().politicianImages
+    .filter((image) => image.politicianId === politicianId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function addPoliticianPublicImage(input: {
+  politicianId: string;
+  authorId: string;
+  authorName: string;
+  imageDataUrl: string;
+  caption?: string;
+}): PoliticianPublicImage {
+  const store = readStore();
+  const created: PoliticianPublicImage = {
+    id: eventId("pimg"),
+    politicianId: input.politicianId,
+    authorId: input.authorId,
+    authorName: input.authorName,
+    imageDataUrl: input.imageDataUrl,
+    caption: input.caption?.trim(),
+    createdAt: new Date().toISOString(),
+  };
+
+  const nextImages = [created, ...store.politicianImages].slice(0, 120);
+  writeStore({
+    ...store,
+    politicianImages: nextImages,
+  });
+
+  return created;
 }

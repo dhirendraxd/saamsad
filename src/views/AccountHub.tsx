@@ -4,32 +4,29 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Bell,
-  FolderOpen,
-  Layers,
   LogIn,
   MapPin,
-  MessageSquare,
   Plus,
-  Settings,
-  Shield,
-  Upload,
   User,
 } from "lucide-react";
 import ProjectCard from "@/components/ProjectCard";
+import PoliticianCard from "@/components/PoliticianCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
 import ActivityFeed from "@/components/ActivityFeed";
 import type { ActivityItem } from "@/components/ActivityFeed";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/useAuth";
-import { Link, Navigate, useLocation } from "@/lib/router";
+import { Link, Navigate, useLocation, useNavigate } from "@/lib/router";
 import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQueries";
 import type { Project } from "@/lib/api/contracts";
 import {
+  addPoliticianPublicImage,
   addProjectComment,
   createIssue,
   listActivityByUser,
   listIssuesByWard,
   listNotificationsByUser,
+  listPoliticianPublicImages,
   listVerificationsByProject,
   markAllNotificationsRead,
   pushActivity,
@@ -84,9 +81,24 @@ const ErrorPanel = ({ message, onRetry }: { message: string; onRetry: () => void
   </div>
 );
 
+const EmptyProjectSlot = () => (
+  <div className="surface-line border-dashed border-accent/30 pt-5">
+    <p className="text-sm font-semibold text-foreground">Project Slot Open</p>
+    <p className="mt-1 text-xs text-muted-foreground">No additional ongoing projects found in this ward yet.</p>
+  </div>
+);
+
+const wardChairpersonServiceById: Record<string, string> = {
+  p7: "Former MP: 2074-2079 BS",
+  p8: "Former MP: 2079-2082 BS",
+  p9: "Earlier representative term",
+  p10: "Former Ward Representative (service period not verified)",
+};
+
 const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const { session, isAuthenticated, isReady, role, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { data: politicians = [], isLoading: isPoliticiansLoading, isError: isPoliticiansError, refetch: refetchPoliticians } = usePoliticiansQuery();
   const { data: projects = [], isLoading: isProjectsLoading, isError: isProjectsError, isFetching: isProjectsFetching, refetch: refetchProjects } = useProjectsQuery();
 
@@ -95,10 +107,12 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [newProject, setNewProject] = useState({ title: "", category: "Infrastructure", expectedCompletion: "" });
   const [projectUpdateForm, setProjectUpdateForm] = useState({ projectId: "", progress: "", note: "" });
+
   const [issues, setIssues] = useState<IssueReport[]>([]);
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
   const [issueForm, setIssueForm] = useState({ title: "", description: "", location: "", category: "Infrastructure" });
   const [issueEvidence, setIssueEvidence] = useState<string[]>([]);
+
   const [activityEvents, setActivityEvents] = useState<ReturnType<typeof listActivityByUser>>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -115,6 +129,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     { title: "Campaign Expense Report", uploaded: "Jan 2026", status: "Verified" },
   ]);
   const [newDocTitle, setNewDocTitle] = useState("");
+  const [publicImageCaption, setPublicImageCaption] = useState("");
+  const [politicianPublicImages, setPoliticianPublicImages] = useState<ReturnType<typeof listPoliticianPublicImages>>([]);
 
   const accountRole: Role = isAuthenticated ? (role === "politician" ? "politician" : "citizen") : targetRole ?? "citizen";
   const demoSession = accountRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
@@ -126,9 +142,18 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     setNotifications(listNotificationsByUser(activeSession.userId));
   }, [activeSession.userId, activeSession.ward]);
 
+  useEffect(() => {
+    if (accountRole !== "politician") {
+      setPoliticianPublicImages([]);
+      return;
+    }
+
+    const politicianId = politician?.id ?? activeSession.userId;
+    setPoliticianPublicImages(listPoliticianPublicImages(politicianId));
+  }, [accountRole, activeSession.userId, politician?.id]);
+
   const politician = useMemo(() => {
     if (accountRole !== "politician") return null;
-
     return (
       politicians.find((candidate) => candidate.id === activeSession.userId) ||
       politicians.find((candidate) => candidate.name.trim().toLowerCase() === activeSession.name.trim().toLowerCase()) ||
@@ -141,6 +166,40 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     [activeSession.ward, politicians],
   );
 
+  const wardChairperson = useMemo(() => {
+    if (localPoliticians.length === 0) return null;
+
+    return [...localPoliticians].sort((left, right) => {
+      if (right.accountabilityScore !== left.accountabilityScore) {
+        return right.accountabilityScore - left.accountabilityScore;
+      }
+
+      if (right.activeProjects !== left.activeProjects) {
+        return right.activeProjects - left.activeProjects;
+      }
+
+      return right.communityTrust - left.communityTrust;
+    })[0];
+  }, [localPoliticians]);
+
+  const wardPastRepresentatives = useMemo(() => {
+    if (localPoliticians.length === 0) return [];
+
+    return [...localPoliticians]
+      .sort((left, right) => {
+        if (right.accountabilityScore !== left.accountabilityScore) {
+          return right.accountabilityScore - left.accountabilityScore;
+        }
+
+        if (right.activeProjects !== left.activeProjects) {
+          return right.activeProjects - left.activeProjects;
+        }
+
+        return right.communityTrust - left.communityTrust;
+      })
+      .slice(1, 3);
+  }, [localPoliticians]);
+
   const safeProjects = useMemo(() => (isProjectsError ? [] : projects), [isProjectsError, projects]);
   const allProjects = useMemo(() => [...createdProjects, ...safeProjects], [createdProjects, safeProjects]);
 
@@ -152,11 +211,25 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     return allProjects.filter((project) => project.ward === activeSession.ward);
   }, [accountRole, allProjects, activeSession.ward, politician]);
 
-  const visibleProjects = localProjects.length > 0 ? localProjects.slice(0, 8) : allProjects.slice(0, 6);
+  const ongoingLocalProjects = useMemo(
+    () => localProjects.filter((project) => project.status !== "completed"),
+    [localProjects],
+  );
+
+  const overviewProjectCards = useMemo(
+    () => ongoingLocalProjects.slice(0, 3),
+    [ongoingLocalProjects],
+  );
+
+  const visibleProjects = useMemo(
+    () => (localProjects.length > 0 ? localProjects.slice(0, 8) : allProjects.slice(0, 6)),
+    [allProjects, localProjects],
+  );
 
   useEffect(() => {
     if (!selectedProjectId && visibleProjects.length > 0) {
       setSelectedProjectId(visibleProjects[0].id);
+      return;
     }
 
     if (selectedProjectId && !visibleProjects.some((project) => project.id === selectedProjectId)) {
@@ -171,7 +244,6 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
 
   const currentUserVerification = useMemo(() => {
     if (!selectedProjectId) return null;
-
     return listVerificationsByProject(selectedProjectId).find((item) => item.userId === activeSession.userId) ?? null;
   }, [activeSession.userId, selectedProjectId, activityEvents]);
 
@@ -226,6 +298,12 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
 
   const tabs: Tab[] = accountRole === "citizen" ? ["overview", "projects", "activity"] : ["overview", "projects", "activity", "transparency", "settings"];
 
+  const refreshLocalData = () => {
+    setIssues(listIssuesByWard(activeSession.ward));
+    setActivityEvents(listActivityByUser(activeSession.userId));
+    setNotifications(listNotificationsByUser(activeSession.userId));
+  };
+
   const handleOpenNotifications = () => {
     const next = !showNotifications;
     setShowNotifications(next);
@@ -236,18 +314,11 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     }
   };
 
-  const refreshLocalData = () => {
-    setIssues(listIssuesByWard(activeSession.ward));
-    setActivityEvents(listActivityByUser(activeSession.userId));
-    setNotifications(listNotificationsByUser(activeSession.userId));
-  };
-
   const handleIssueEvidence = (files: FileList | null) => {
     if (!files) {
       setIssueEvidence([]);
       return;
     }
-
     setIssueEvidence(Array.from(files).map((file) => file.name));
   };
 
@@ -326,7 +397,6 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
       setVerificationEvidence([]);
       return;
     }
-
     setVerificationEvidence(Array.from(files).map((file) => file.name));
   };
 
@@ -335,7 +405,6 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
       setCommentEvidence([]);
       return;
     }
-
     setCommentEvidence(Array.from(files).map((file) => file.name));
   };
 
@@ -430,12 +499,14 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     };
 
     setCreatedProjects((prev) => [project, ...prev]);
+
     pushActivity({
       userId: activeSession.userId,
       userRole: "politician",
       type: "project",
       summary: `Created project: ${project.title}`,
     });
+
     pushNotification({
       userId: activeSession.userId,
       title: "Project created",
@@ -480,9 +551,61 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
 
   const handleAddTransparencyDoc = () => {
     if (!newDocTitle.trim()) return;
-
     setTransparencyDocs((prev) => [{ title: newDocTitle.trim(), uploaded: "Just now", status: "Pending" }, ...prev]);
     setNewDocTitle("");
+  };
+
+  const fileToDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => reject(new Error("Could not read image"));
+      reader.readAsDataURL(file);
+    });
+
+  const handlePublicInteractionUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !isAuthenticated || accountRole !== "politician") return;
+
+    const politicianId = politician?.id ?? activeSession.userId;
+    const selected = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    if (selected.length === 0) return;
+
+    const imageDataUrls = await Promise.all(selected.map((file) => fileToDataUrl(file)));
+    imageDataUrls.forEach((imageDataUrl) => {
+      if (!imageDataUrl) return;
+      addPoliticianPublicImage({
+        politicianId,
+        authorId: activeSession.userId,
+        authorName: activeSession.name,
+        imageDataUrl,
+        caption: publicImageCaption,
+      });
+    });
+
+    pushActivity({
+      userId: activeSession.userId,
+      userRole: "politician",
+      type: "project",
+      summary: `Uploaded ${imageDataUrls.length} public interaction photo${imageDataUrls.length > 1 ? "s" : ""}`,
+    });
+
+    setPoliticianPublicImages(listPoliticianPublicImages(politicianId));
+    setPublicImageCaption("");
+  };
+
+  const handleDashboardProjectClick = (project: Project) => {
+    setSelectedProjectId(project.id);
+    if (accountRole === "citizen") {
+      setActiveTab("projects");
+    }
+  };
+
+  const handleOverviewProjectNavigate = (project: Project) => {
+    navigate(`/project/${project.id}`);
+  };
+
+  const handleOverviewPoliticianNavigate = (politicianId: string) => {
+    navigate(`/politician/${politicianId}`);
   };
 
   const handleSignOut = async () => {
@@ -495,12 +618,14 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8">
         <div className="surface-line flex flex-col gap-4 pt-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-none border border-primary/30 bg-primary/10">
               <User className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{accountRole === "politician" ? "Politician Dashboard" : "Citizen Dashboard"}</p>
-              <h1 className="text-2xl font-bold text-foreground">{accountRole === "politician" ? "Manage work and respond to citizens" : "Participate in your local governance"}</h1>
+              <p className="text-xs uppercase tracking-[0.2em] text-accent">{accountRole === "politician" ? "Politician Dashboard" : "Citizen Dashboard"}</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                {accountRole === "politician" ? "Manage Work and Respond to Citizens" : "Participate in Your Local Governance"}
+              </h1>
               <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 {activeSession.ward}, {activeSession.municipality}
@@ -509,7 +634,13 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="rounded-none" onClick={isAuthenticated ? handleSignOut : undefined} asChild={!isAuthenticated}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-none border-accent/40 text-accent hover:text-twitter-blue"
+              onClick={isAuthenticated ? handleSignOut : undefined}
+              asChild={!isAuthenticated}
+            >
               {isAuthenticated ? (
                 <span className="flex items-center gap-2">
                   <LogIn className="h-4 w-4" />
@@ -522,7 +653,12 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </Link>
               )}
             </Button>
-            <Button variant="outline" size="sm" className="rounded-none" onClick={handleOpenNotifications}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-none border-twitter-blue/40 text-twitter-blue hover:bg-twitter-blue/5"
+              onClick={handleOpenNotifications}
+            >
               <Bell className="h-4 w-4" />
               Alerts
               {unreadNotifications > 0 && <span className="ml-1 text-xs text-twitter-blue">({unreadNotifications})</span>}
@@ -531,8 +667,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
         </div>
 
         {showNotifications && (
-          <div className="surface-line mt-4 pt-4">
-            <h2 className="text-sm font-semibold text-foreground">Notifications</h2>
+          <div className="surface-line mt-4 border-t-2 border-twitter-blue/40 pt-4">
+            <h2 className="text-sm font-semibold text-twitter-blue">Notifications</h2>
             <div className="mt-3 space-y-2">
               {notifications.length === 0 && <p className="text-sm text-muted-foreground">No notifications yet.</p>}
               {notifications.map((notification) => (
@@ -551,8 +687,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`rounded-none border-b px-3 py-2 text-sm font-medium ${
-                activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:border-border"
+              className={`rounded-none border-b px-3 py-2 text-sm font-semibold ${
+                activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:border-accent/40 hover:text-accent"
               }`}
             >
               {tab[0].toUpperCase() + tab.slice(1)}
@@ -561,78 +697,93 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
         </div>
 
         {activeTab === "overview" && (
-          <div className="mt-5 space-y-5">
+          <div className="mt-5 space-y-6">
             {accountRole === "citizen" ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-muted-foreground">Ward</p>
+                    <p className="text-xs uppercase text-primary">Ward</p>
                     <p className="mt-1 text-lg font-bold text-foreground">{activeSession.ward}</p>
                   </div>
                   <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-muted-foreground">Local Politicians</p>
+                    <p className="text-xs uppercase text-accent">Local Politicians till now</p>
                     <p className="mt-1 text-lg font-bold text-foreground">{localPoliticians.length}</p>
                   </div>
                   <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-muted-foreground">Ongoing Projects</p>
-                    <p className="mt-1 text-lg font-bold text-foreground">{localProjects.length}</p>
+                    <p className="text-xs uppercase text-civic-green">Ongoing Projects</p>
+                    <p className="mt-1 text-lg font-bold text-foreground">{ongoingLocalProjects.length}</p>
                   </div>
                   <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-muted-foreground">My Issues</p>
+                    <p className="text-xs uppercase text-civic-amber">My Issues</p>
                     <p className="mt-1 text-lg font-bold text-foreground">{myIssuesCount}</p>
                   </div>
                 </div>
 
-                <div className="surface-line pt-4 space-y-3">
-                  <h2 className="text-base font-bold text-foreground">Issue Reporting</h2>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <input className="field-line" placeholder="Issue title" value={issueForm.title} onChange={(event) => setIssueForm((prev) => ({ ...prev, title: event.target.value }))} />
-                    <input className="field-line" placeholder="Location" value={issueForm.location} onChange={(event) => setIssueForm((prev) => ({ ...prev, location: event.target.value }))} />
-                  </div>
-                  <textarea className="field-line min-h-20" placeholder="Describe the issue" value={issueForm.description} onChange={(event) => setIssueForm((prev) => ({ ...prev, description: event.target.value }))} />
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <input className="field-line" placeholder="Category" value={issueForm.category} onChange={(event) => setIssueForm((prev) => ({ ...prev, category: event.target.value }))} />
-                    <label className="field-line flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Upload photos/documents</span>
-                      <input type="file" multiple className="max-w-[180px] text-xs" onChange={(event) => handleIssueEvidence(event.target.files)} />
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">{issueEvidence.length > 0 ? `Selected: ${issueEvidence.join(", ")}` : "No files selected"}</p>
-                    <Button variant="civic" size="sm" className="rounded-none" onClick={handleCreateIssue} disabled={!isAuthenticated}>
-                      Submit Issue
-                    </Button>
-                  </div>
+                <div>
+                  <h2 className="mb-3 text-base font-bold text-primary">Ward Chairperson</h2>
+                  {isPoliticiansLoading ? (
+                    <div className="flex justify-center">
+                      <div className="w-full max-w-[280px]">
+                        <ProjectSkeleton />
+                      </div>
+                    </div>
+                  ) : isPoliticiansError ? (
+                    <ErrorPanel message="Politician profiles failed to load." onRetry={() => refetchPoliticians()} />
+                  ) : wardChairperson ? (
+                    <div className="grid gap-6 lg:grid-cols-3">
+                      <div className="w-full">
+                        <PoliticianCard
+                          politician={wardChairperson}
+                          onClick={() => handleOverviewPoliticianNavigate(wardChairperson.id)}
+                        />
+                      </div>
+
+                      {wardPastRepresentatives.map((representative) => (
+                        <div key={representative.id} className="w-full">
+                          <PoliticianCard
+                            politician={representative}
+                            grayscalePhoto
+                            fadedText
+                            hoverLabel={wardChairpersonServiceById[representative.id] ?? "Former Ward Chairperson"}
+                            onClick={() => handleOverviewPoliticianNavigate(representative.id)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="surface-line pt-4 text-sm text-muted-foreground">
+                      No chairperson found for this ward yet.
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <h2 className="mb-3 text-base font-bold text-foreground">Ongoing Projects</h2>
+                  <h2 className="mb-3 text-base font-bold text-accent">Project Highlights</h2>
                   {isProjectsLoading || isProjectsFetching ? (
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {Array.from({ length: 4 }).map((_, idx) => (
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {Array.from({ length: 3 }).map((_, idx) => (
                         <ProjectSkeleton key={idx} />
                       ))}
                     </div>
                   ) : isProjectsError ? (
                     <ErrorPanel message="Projects failed to load." onRetry={() => refetchProjects()} />
                   ) : (
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {visibleProjects.map((project) => (
-                        <ProjectCard key={project.id} project={project} disableNavigation />
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {overviewProjectCards.map((project) => (
+                        <ProjectCard key={project.id} project={project} onCardClick={handleOverviewProjectNavigate} />
                       ))}
+                      {overviewProjectCards.length < 3 &&
+                        Array.from({ length: 3 - overviewProjectCards.length }).map((_, idx) => (
+                          <EmptyProjectSlot key={`overview-empty-${idx}`} />
+                        ))}
                     </div>
                   )}
-                </div>
-
-                <div className="surface-line pt-4">
-                  <h2 className="mb-3 text-base font-bold text-foreground">Recent Updates</h2>
-                  <ActivityFeed items={activityItems.slice(0, 5)} />
                 </div>
               </>
             ) : (
               <>
-                <div className="surface-line pt-5">
-                  <h2 className="text-base font-bold text-foreground">Performance Overview</h2>
+                <div className="surface-line border-t-2 border-primary/40 pt-5">
+                  <h2 className="text-base font-bold text-primary">Performance Overview</h2>
                   {isPoliticiansLoading && <ProjectSkeleton />}
                   {isPoliticiansError && <ErrorPanel message="Could not load profile metrics." onRetry={() => refetchPoliticians()} />}
                   {!isPoliticiansLoading && !isPoliticiansError && politician && (
@@ -648,17 +799,64 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-muted-foreground">Total Projects</p>
+                  <div className="surface-line border-t-2 border-accent/40 pt-4">
+                    <p className="text-xs uppercase text-accent">Total Projects</p>
                     <p className="mt-1 text-lg font-bold text-foreground">{publicPerformance.activeProjects}</p>
                   </div>
-                  <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-muted-foreground">Completion Rate</p>
+                  <div className="surface-line border-t-2 border-civic-green/50 pt-4">
+                    <p className="text-xs uppercase text-civic-green">Completion Rate</p>
                     <p className="mt-1 text-lg font-bold text-foreground">{publicPerformance.completionRate}%</p>
                   </div>
-                  <div className="surface-line pt-4">
-                    <p className="text-xs uppercase text-muted-foreground">Feedback Handled</p>
+                  <div className="surface-line border-t-2 border-twitter-blue/40 pt-4">
+                    <p className="text-xs uppercase text-twitter-blue">Feedback Handled</p>
                     <p className="mt-1 text-lg font-bold text-foreground">{publicPerformance.feedbackHandled}</p>
+                  </div>
+                </div>
+
+                <div className="surface-line border-t-2 border-twitter-blue/40 pt-4 space-y-3">
+                  <h3 className="font-bold text-twitter-blue">Public Interaction Gallery</h3>
+                  <p className="text-sm text-muted-foreground">Upload your community interaction photos. They will appear publicly in your Public Score Snapshot.</p>
+                  <input
+                    className="field-line"
+                    placeholder="Optional caption"
+                    value={publicImageCaption}
+                    onChange={(event) => setPublicImageCaption(event.target.value)}
+                  />
+                  <label className="flex items-center justify-between gap-3 border-b border-border py-2 text-sm text-muted-foreground">
+                    <span>Upload images</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="max-w-[200px] text-xs"
+                      onChange={(event) => {
+                        void handlePublicInteractionUpload(event.target.files);
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
+                  {politicianPublicImages.length > 0 && (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {politicianPublicImages.slice(0, 6).map((item) => (
+                        <div key={item.id} className="surface-line pt-2">
+                          <img src={item.imageDataUrl} alt={item.caption || "Public interaction"} className="h-28 w-full object-cover" loading="lazy" />
+                          <p className="mt-2 text-xs text-muted-foreground">{item.caption?.trim() || "Community interaction"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h2 className="mb-3 text-base font-bold text-accent">Your Active Project Highlights</h2>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {overviewProjectCards.map((project) => (
+                      <ProjectCard key={project.id} project={project} onCardClick={handleOverviewProjectNavigate} />
+                    ))}
+                    {overviewProjectCards.length < 3 &&
+                      Array.from({ length: 3 - overviewProjectCards.length }).map((_, idx) => (
+                        <EmptyProjectSlot key={`overview-poli-empty-${idx}`} />
+                      ))}
                   </div>
                 </div>
               </>
@@ -669,9 +867,12 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
         {activeTab === "projects" && (
           <div className="mt-5 space-y-5">
             {accountRole === "citizen" && (
-              <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
-                <div>
-                  <h2 className="mb-3 text-base font-bold text-foreground">Projects in Your Ward</h2>
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+                <div className="space-y-4">
+                  <div className="surface-line pt-5">
+                    <h2 className="text-base font-bold text-foreground">Projects in Your Ward</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">Select a project to verify it or leave a comment. The list stays local to your ward by default.</p>
+                  </div>
                   {isProjectsLoading || isProjectsFetching ? (
                     <div className="grid gap-4 sm:grid-cols-2">
                       {Array.from({ length: 4 }).map((_, idx) => (
@@ -682,14 +883,14 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                     <ErrorPanel message="Projects failed to load." onRetry={() => refetchProjects()} />
                   ) : (
                     <>
-                      <select className="field-line mb-3" value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)}>
+                      <select className="field-line mb-3 max-w-xl" value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)}>
                         {visibleProjects.map((project) => (
                           <option key={project.id} value={project.id}>{project.title}</option>
                         ))}
                       </select>
                       <div className="grid gap-4 sm:grid-cols-2">
                         {visibleProjects.map((project) => (
-                          <ProjectCard key={project.id} project={project} disableNavigation />
+                          <ProjectCard key={project.id} project={project} disableNavigation onCardClick={handleDashboardProjectClick} />
                         ))}
                       </div>
                     </>
@@ -697,38 +898,40 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="surface-line pt-4 space-y-3">
-                    <h3 className="font-bold text-foreground">Project Verification</h3>
-                    <p className="text-xs text-muted-foreground">Mark selected project status and upload proof.</p>
+                  <div className="surface-line pt-5 space-y-3">
+                    <h3 className="font-bold text-civic-green">Project Check-in</h3>
+                    <p className="text-sm text-muted-foreground">Use one simple form to verify progress and share a comment on the selected project.</p>
                     <div className="grid grid-cols-2 gap-2">
                       {(["completed", "in-progress", "delayed", "not-started"] as VerificationVote[]).map((vote) => (
                         <button
                           key={vote}
                           type="button"
-                          className={`rounded-none border px-2 py-2 text-xs font-semibold ${verificationVote === vote ? "border-primary text-primary" : "border-border text-foreground"}`}
+                          className={`border px-2 py-2 text-xs font-semibold transition-colors ${verificationVote === vote ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:border-accent/40"}`}
                           onClick={() => setVerificationVote(vote)}
                         >
                           {voteLabel[vote]}
                         </button>
                       ))}
                     </div>
-                    <textarea className="field-line min-h-20" placeholder="Add verification note" value={verificationNote} onChange={(event) => setVerificationNote(event.target.value)} />
-                    <label className="field-line flex items-center justify-between text-sm text-muted-foreground">
+                    <textarea className="field-line min-h-20" placeholder="Add a short verification note" value={verificationNote} onChange={(event) => setVerificationNote(event.target.value)} />
+                    <label className="flex items-center justify-between gap-3 border-b border-border py-2 text-sm text-muted-foreground">
                       <span>Upload proof</span>
                       <input type="file" multiple className="max-w-[160px] text-xs" onChange={(event) => handleVerificationEvidence(event.target.files)} />
                     </label>
-                    <Button variant="civic" size="sm" className="w-full rounded-none" onClick={handleSubmitVerification} disabled={!isAuthenticated || !selectedProjectId}>
-                      Submit Verification
-                    </Button>
                     {currentUserVerification && (
                       <p className="text-xs text-muted-foreground">Latest vote: {voteLabel[currentUserVerification.vote]}</p>
                     )}
+                    <div className="flex gap-2">
+                      <Button variant="civic" size="sm" className="flex-1 rounded-none" onClick={handleSubmitVerification} disabled={!isAuthenticated || !selectedProjectId}>
+                        Submit Verification
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="surface-line pt-4 space-y-3">
-                    <h3 className="font-bold text-foreground">Feedback & Discussion</h3>
-                    <textarea className="field-line min-h-20" placeholder="Write a project comment" value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} />
-                    <label className="field-line flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="surface-line pt-5 space-y-3">
+                    <h3 className="font-bold text-twitter-blue">Project Comment</h3>
+                    <textarea className="field-line min-h-20" placeholder="Write a short project comment" value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} />
+                    <label className="flex items-center justify-between gap-3 border-b border-border py-2 text-sm text-muted-foreground">
                       <span>Attach evidence</span>
                       <input type="file" multiple className="max-w-[160px] text-xs" onChange={(event) => handleCommentEvidence(event.target.files)} />
                     </label>
@@ -761,8 +964,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                   </div>
                 )}
 
-                <div className="surface-line pt-4 space-y-3">
-                  <h3 className="font-bold text-foreground">Post Progress Update</h3>
+                <div className="surface-line border-t-2 border-civic-green/50 pt-4 space-y-3">
+                  <h3 className="font-bold text-civic-green">Post Progress Update</h3>
                   <select className="field-line" value={projectUpdateForm.projectId} onChange={(event) => setProjectUpdateForm((prev) => ({ ...prev, projectId: event.target.value }))}>
                     <option value="">Select project</option>
                     {createdProjects.map((project) => (
@@ -776,7 +979,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   {visibleProjects.map((project) => (
-                    <ProjectCard key={project.id} project={project} disableNavigation />
+                    <ProjectCard key={project.id} project={project} disableNavigation onCardClick={handleDashboardProjectClick} />
                   ))}
                 </div>
               </div>
@@ -786,14 +989,14 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
 
         {activeTab === "activity" && (
           <div className="mt-5 space-y-5">
-            <div className="surface-line pt-4">
-              <h2 className="mb-3 text-base font-bold text-foreground">Activity Tracking</h2>
+            <div className="surface-line border-t-2 border-twitter-blue/40 pt-4">
+              <h2 className="mb-3 text-base font-bold text-twitter-blue">Recent Updates & Activity</h2>
               <ActivityFeed items={activityItems} />
             </div>
 
             {accountRole === "citizen" && (
-              <div className="surface-line pt-4 space-y-3">
-                <h3 className="font-bold text-foreground">My Reported Issues</h3>
+              <div className="surface-line border-t-2 border-civic-amber/60 pt-4 space-y-3">
+                <h3 className="font-bold text-civic-amber">My Reported Issues</h3>
                 {issues.filter((issue) => issue.authorId === activeSession.userId).map((issue) => (
                   <div key={issue.id} className="border-t border-border pt-3">
                     <div className="flex items-center justify-between">
@@ -808,8 +1011,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
             )}
 
             {accountRole === "politician" && (
-              <div className="surface-line pt-4 space-y-3">
-                <h3 className="font-bold text-foreground">Issue Response Inbox</h3>
+              <div className="surface-line border-t-2 border-civic-amber/60 pt-4 space-y-3">
+                <h3 className="font-bold text-civic-amber">Issue Response Inbox</h3>
                 <p className="text-xs text-muted-foreground">{pendingIssuesCount} pending response</p>
                 {issues.map((issue) => (
                   <div key={issue.id} className="border-t border-border pt-3">
