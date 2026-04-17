@@ -62,11 +62,21 @@ export interface ActivityEvent {
   createdAt: string;
 }
 
+export interface NotificationItem {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 interface ParticipationStore {
   issues: IssueReport[];
   verifications: ProjectVerification[];
   comments: LocalProjectComment[];
   activity: ActivityEvent[];
+  notifications: NotificationItem[];
 }
 
 const STORAGE_KEY = "civic-participation-v1";
@@ -76,6 +86,7 @@ const EMPTY_STORE: ParticipationStore = {
   verifications: [],
   comments: [],
   activity: [],
+  notifications: [],
 };
 
 function hasWindow() {
@@ -94,6 +105,7 @@ function safeParse(raw: string | null): ParticipationStore {
       verifications: Array.isArray(parsed.verifications) ? parsed.verifications : [],
       comments: Array.isArray(parsed.comments) ? parsed.comments : [],
       activity: Array.isArray(parsed.activity) ? parsed.activity : [],
+      notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
     };
   } catch {
     return EMPTY_STORE;
@@ -308,4 +320,50 @@ export function listActivityByUser(userId: string): ActivityEvent[] {
   return readStore().activity
     .filter((event) => event.userId === userId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function pushNotification(input: {
+  userId: string;
+  title: string;
+  message: string;
+}): NotificationItem {
+  const store = readStore();
+  const created: NotificationItem = {
+    id: eventId("notif"),
+    userId: input.userId,
+    title: input.title.trim(),
+    message: input.message.trim(),
+    isRead: false,
+    createdAt: new Date().toISOString(),
+  };
+
+  writeStore({
+    ...store,
+    notifications: [created, ...store.notifications].slice(0, 200),
+  });
+
+  return created;
+}
+
+export function listNotificationsByUser(userId: string): NotificationItem[] {
+  return readStore().notifications
+    .filter((notification) => notification.userId === userId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function markAllNotificationsRead(userId: string): void {
+  const store = readStore();
+  const nextNotifications = store.notifications.map((notification) =>
+    notification.userId === userId
+      ? {
+          ...notification,
+          isRead: true,
+        }
+      : notification,
+  );
+
+  writeStore({
+    ...store,
+    notifications: nextNotifications,
+  });
 }

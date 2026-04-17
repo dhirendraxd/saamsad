@@ -15,6 +15,7 @@ import {
   addProjectComment,
   listLocalCommentsByProject,
   listVerificationsByProject,
+  pushNotification,
   pushActivity,
   upsertVerification,
   type VerificationVote,
@@ -108,6 +109,11 @@ const ProjectDetail = () => {
       type: "comment",
       summary: `Commented on ${project?.title ?? "project"}`,
     });
+    pushNotification({
+      userId: session.userId,
+      title: "Comment posted",
+      message: `Your comment is now visible on ${project?.title ?? "this project"}.`,
+    });
 
     setLocalComments((prev) => [created, ...prev]);
     setCommentDraft("");
@@ -134,6 +140,11 @@ const ProjectDetail = () => {
       userRole: role === "politician" ? "politician" : "citizen",
       type: "verification",
       summary: `Marked ${project?.title ?? "project"} as ${verificationLabelMap[vote]}`,
+    });
+    pushNotification({
+      userId: session.userId,
+      title: "Verification submitted",
+      message: `You marked ${project?.title ?? "this project"} as ${verificationLabelMap[vote]}.`,
     });
 
     setLocalVerifications(listVerificationsByProject(id));

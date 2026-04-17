@@ -34,11 +34,15 @@ import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQ
 import type { Project } from "@/lib/api/contracts";
 import {
   createIssue,
+  listNotificationsByUser,
   listActivityByUser,
   listIssuesByWard,
+  markAllNotificationsRead,
+  pushNotification,
   pushActivity,
   respondToIssue,
   type IssueReport,
+  type NotificationItem,
 } from "@/lib/localParticipation";
 
 type Role = "citizen" | "politician";
@@ -127,6 +131,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const [newDocTitle, setNewDocTitle] = useState("");
   const [issues, setIssues] = useState<IssueReport[]>([]);
   const [activityEvents, setActivityEvents] = useState<ReturnType<typeof listActivityByUser>>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [issueForm, setIssueForm] = useState({
     title: "",
     description: "",
@@ -143,6 +149,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   useEffect(() => {
     setIssues(listIssuesByWard(activeSession.ward));
     setActivityEvents(listActivityByUser(activeSession.userId));
+    setNotifications(listNotificationsByUser(activeSession.userId));
   }, [activeSession.userId, activeSession.ward]);
 
   const politician = useMemo(() => {
@@ -187,6 +194,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
         : fallbackCitizenActivity;
   const answeredFeedback = issues.filter((issue) => issue.responses.some((entry) => entry.responderId === activeSession.userId)).length;
   const pendingFeedback = issues.filter((issue) => issue.responses.length === 0).length;
+  const unreadNotifications = notifications.filter((notification) => !notification.isRead).length;
 
   const publicPerformance = {
     publishedPromises: manifestoPromises.length,
@@ -239,7 +247,13 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
         type: "project",
         summary: `Created project: ${project.title}`,
       });
+      pushNotification({
+        userId: activeSession.userId,
+        title: "Project created",
+        message: `${project.title} is now visible in your workspace.`,
+      });
       setActivityEvents(listActivityByUser(activeSession.userId));
+      setNotifications(listNotificationsByUser(activeSession.userId));
     }
     setShowProjectForm(false);
     setNewProject({ title: "", category: "Infrastructure", expectedCompletion: "" });
@@ -294,7 +308,13 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
         type: "project",
         summary: `Published project progress update`,
       });
+      pushNotification({
+        userId: activeSession.userId,
+        title: "Progress update published",
+        message: "Citizens can now see your latest project update.",
+      });
       setActivityEvents(listActivityByUser(activeSession.userId));
+      setNotifications(listNotificationsByUser(activeSession.userId));
     }
   };
 
@@ -320,11 +340,17 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
       type: "issue",
       summary: `Reported issue: ${issueForm.title.trim()}`,
     });
+    pushNotification({
+      userId: activeSession.userId,
+      title: "Issue submitted",
+      message: "Your issue has been published to the ward issue inbox.",
+    });
 
     setIssueForm({ title: "", description: "", location: "", category: "Infrastructure" });
     setIssueEvidence([]);
     setIssues(listIssuesByWard(activeSession.ward));
     setActivityEvents(listActivityByUser(activeSession.userId));
+    setNotifications(listNotificationsByUser(activeSession.userId));
   };
 
   const handleIssueEvidence = (files: FileList | null) => {
@@ -357,10 +383,30 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
       type: "response",
       summary: `Responded to issue: ${issue.title}`,
     });
+    pushNotification({
+      userId: activeSession.userId,
+      title: "Issue response posted",
+      message: `You responded to ${issue.authorName}'s issue.`,
+    });
+    pushNotification({
+      userId: issue.authorId,
+      title: "Your issue received a response",
+      message: `${activeSession.name} responded to: ${issue.title}`,
+    });
 
     setResponseDrafts((prev) => ({ ...prev, [issueId]: "" }));
     setIssues(listIssuesByWard(activeSession.ward));
     setActivityEvents(listActivityByUser(activeSession.userId));
+    setNotifications(listNotificationsByUser(activeSession.userId));
+  };
+
+  const handleOpenNotifications = () => {
+    const nextVisible = !showNotifications;
+    setShowNotifications(nextVisible);
+    if (nextVisible && unreadNotifications > 0) {
+      markAllNotificationsRead(activeSession.userId);
+      setNotifications(listNotificationsByUser(activeSession.userId));
+    }
   };
 
   const handleSignOut = async () => {
@@ -434,10 +480,12 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
             </Button>
           </div>
           <div className="mt-auto space-y-2 text-sm">
-            <Button variant="outline" size="sm" className="w-full justify-start gap-2 rounded-none" onClick={() => setActiveTab("settings")}>
-              <Settings className="h-4 w-4" />
-              Settings
-            </Button>
+            {accountRole === "politician" && (
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2 rounded-none" onClick={() => setActiveTab("settings")}>
+                <Settings className="h-4 w-4" />
+                Settings
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -471,23 +519,55 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 rounded-full border border-border px-3 py-2 bg-white">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <input className="outline-none text-sm bg-transparent" placeholder="Search projects or updates" aria-label="Search projects or updates" />
-            </div>
-              <Button variant="outline" size="sm" className="rounded-none">
-                <Bell className="w-4 h-4 mr-1" />
-                Alerts
-              </Button>
-            </div>
+            {accountRole === "politician" && (
+              <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-2 rounded-full border border-border px-3 py-2 bg-white">
+                  <Search className="w-4 h-4 text-muted-foreground" />
+                  <input className="outline-none text-sm bg-transparent" placeholder="Search projects or updates" aria-label="Search projects or updates" />
+                </div>
+                <Button variant="outline" size="sm" className="rounded-none relative" onClick={handleOpenNotifications}>
+                  <Bell className="w-4 h-4 mr-1" />
+                  Alerts
+                  {unreadNotifications > 0 && (
+                    <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-none border border-twitter-blue px-1 text-[10px] font-semibold text-twitter-blue">
+                      {unreadNotifications}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
+
+          {accountRole === "politician" && showNotifications && (
+            <div className="surface-line pt-4">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-foreground">Notifications</h2>
+                <p className="text-xs text-muted-foreground">{notifications.length} total</p>
+              </div>
+              <div className="space-y-2">
+                {notifications.length > 0 ? (
+                  notifications.map((notification) => (
+                    <div key={notification.id} className="border-t border-border pt-2">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-foreground">{notification.title}</p>
+                        {!notification.isRead && <span className="h-2 w-2 rounded-full bg-twitter-blue" aria-hidden="true" />}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{notification.message}</p>
+                      <p className="text-[11px] text-muted-foreground">{new Date(notification.createdAt).toLocaleString()}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No notifications yet.</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="h-4" aria-hidden="true" />
 
           <div className="mt-4 flex flex-wrap gap-2 border-b border-border pb-2">
             {tabs
-              .filter((tab) => (accountRole === "citizen" ? tab.key !== "transparency" : true))
+              .filter((tab) => (accountRole === "citizen" ? ["overview", "projects", "activity"].includes(tab.key) : true))
                 .map((tab) => (
                   <button
                     key={tab.key}
@@ -551,9 +631,9 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                   )}
                   {accountRole === "citizen" && (
                     <div className="surface-line pt-6 space-y-3">
-                      <h2 className="text-lg font-bold text-foreground mb-2">Citizen Account</h2>
+                      <h2 className="text-lg font-bold text-foreground mb-2">Local Area Dashboard</h2>
                       <p className="text-sm text-muted-foreground">
-                        You are verified for {activeSession.ward}. Use this page to follow local projects, upload evidence, and share status checks.
+                        You are verified for {activeSession.ward}, {activeSession.municipality}. Track local projects, raise issues, and verify progress.
                       </p>
                       <div className="border-t border-border pt-3">
                         <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Local Politicians</p>
@@ -600,6 +680,57 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                       </div>
                     )}
                   </div>
+
+                  {accountRole === "citizen" && (
+                    <>
+                      <div className="surface-line pt-4 space-y-3">
+                        <h3 className="text-base font-bold text-foreground">Issue Reporting</h3>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <input
+                            className="field-line"
+                            placeholder="Issue title (broken road, missing service...)"
+                            value={issueForm.title}
+                            onChange={(event) => setIssueForm((prev) => ({ ...prev, title: event.target.value }))}
+                          />
+                          <input
+                            className="field-line"
+                            placeholder="Location"
+                            value={issueForm.location}
+                            onChange={(event) => setIssueForm((prev) => ({ ...prev, location: event.target.value }))}
+                          />
+                        </div>
+                        <textarea
+                          className="field-line min-h-20"
+                          placeholder="Describe the issue in detail"
+                          value={issueForm.description}
+                          onChange={(event) => setIssueForm((prev) => ({ ...prev, description: event.target.value }))}
+                        />
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <input
+                            className="field-line"
+                            placeholder="Category"
+                            value={issueForm.category}
+                            onChange={(event) => setIssueForm((prev) => ({ ...prev, category: event.target.value }))}
+                          />
+                          <label className="field-line flex items-center justify-between text-sm text-muted-foreground">
+                            <span>Upload photos/documents</span>
+                            <input type="file" multiple onChange={(event) => handleIssueEvidence(event.target.files)} className="max-w-[180px] text-xs" />
+                          </label>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">{issueEvidence.length > 0 ? `Selected: ${issueEvidence.join(", ")}` : "No files selected"}</p>
+                          <Button variant="civic" size="sm" className="rounded-none" onClick={handleCreateIssue} disabled={!isAuthenticated}>
+                            Submit Issue
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="surface-line pt-4">
+                        <h3 className="text-base font-bold text-foreground mb-3">Recent Updates & Activity</h3>
+                        <ActivityFeed items={activityItems.slice(0, 5)} />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -898,7 +1029,8 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               )}
             </div>
 
-            <div className="space-y-4 rounded-2xl bg-white/60 p-4 shadow-sm">
+            {accountRole === "politician" && (
+              <div className="space-y-4 rounded-2xl bg-white/60 p-4 shadow-sm">
               <div className="rounded-lg border border-border bg-white p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-semibold text-foreground">Direct Messages</p>
@@ -937,6 +1069,7 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>
