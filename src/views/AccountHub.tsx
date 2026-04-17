@@ -1,6 +1,6 @@
 "use client";
 
-import { type ElementType, useMemo, useState } from "react";
+import { type ElementType, useEffect, useMemo, useState } from "react";
 import ProjectCard from "@/components/ProjectCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
 import ActivityFeed from "@/components/ActivityFeed";
@@ -32,20 +32,17 @@ import { useAuth } from "@/lib/auth/useAuth";
 import { Link, Navigate, useLocation } from "@/lib/router";
 import { usePoliticiansQuery, useProjectsQuery } from "@/hooks/queries/useCivicQueries";
 import type { Project } from "@/lib/api/contracts";
+import {
+  createIssue,
+  listActivityByUser,
+  listIssuesByWard,
+  pushActivity,
+  respondToIssue,
+  type IssueReport,
+} from "@/lib/localParticipation";
 
 type Role = "citizen" | "politician";
 type Tab = "overview" | "projects" | "activity" | "transparency" | "settings";
-type FeedbackStatus = "new" | "reviewed" | "answered";
-
-interface CitizenFeedback {
-  id: string;
-  author: string;
-  projectTitle: string;
-  content: string;
-  date: string;
-  status: FeedbackStatus;
-  response?: string;
-}
 
 const DEMO_CITIZEN = {
   userId: "demo-citizen",
@@ -77,15 +74,6 @@ const tabs: { key: Tab; label: string; icon: ElementType }[] = [
   { key: "settings", label: "Settings", icon: Settings },
 ];
 
-const mockCitizenActivity: ActivityItem[] = [
-  { type: "verification", author: "You", content: "Verified 'Community Health Center' as In Progress", date: "2026-03-12" },
-  { type: "comment", author: "You", content: "Left a comment on Rural Road Rehabilitation project", date: "2026-03-10" },
-  { type: "evidence", author: "You", content: "Uploaded 2 photos for Women's Skill Training Center", date: "2026-03-08" },
-  { type: "comment", author: "You", content: "Commented on Coastal Erosion Prevention project update", date: "2026-03-05" },
-  { type: "verification", author: "Team", content: "Verified 'Road Widening' as Completed", date: "2026-02-28" },
-  { type: "comment", author: "Analyst", content: "Flagged delay on Bridge Expansion", date: "2026-02-22" },
-];
-
 const mockPoliticianActivity: ActivityItem[] = [
   { type: "update", author: "You", content: "Posted a 40% progress update for Ward 5 Community Clinic", date: "2026-03-13" },
   { type: "comment", author: "Citizens", content: "14 new comments received on Water Pipeline Expansion", date: "2026-03-12" },
@@ -94,31 +82,12 @@ const mockPoliticianActivity: ActivityItem[] = [
   { type: "comment", author: "You", content: "Responded to 5 ward feedback threads", date: "2026-03-06" },
 ];
 
-const initialCitizenFeedback: CitizenFeedback[] = [
+const fallbackCitizenActivity: ActivityItem[] = [
   {
-    id: "fb-1",
-    author: "Maya Shrestha",
-    projectTitle: "Ward 5 Community Clinic",
-    content: "Construction pace has slowed this month. Can we get an updated schedule?",
-    date: "2026-03-14",
-    status: "new",
-  },
-  {
-    id: "fb-2",
-    author: "Rabin Bista",
-    projectTitle: "Water Pipeline Expansion",
-    content: "Workers are active but one lane is blocked without safety signs.",
-    date: "2026-03-12",
-    status: "reviewed",
-  },
-  {
-    id: "fb-3",
-    author: "Sita Rai",
-    projectTitle: "Public School Digital Upgrade",
-    content: "Thank you for delivering laptops. Please share maintenance plan too.",
-    date: "2026-03-10",
-    status: "answered",
-    response: "Maintenance schedule will be published with vendor contacts this week.",
+    type: "update",
+    author: "Samsad",
+    content: "Start by reporting an issue or verifying a project to build your local activity timeline.",
+    date: new Date().toISOString(),
   },
 ];
 
@@ -156,12 +125,25 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     { title: "Policy Note: Clean Water", uploaded: "Jan 2026", status: "Verified" },
   ]);
   const [newDocTitle, setNewDocTitle] = useState("");
-  const [citizenFeedback, setCitizenFeedback] = useState<CitizenFeedback[]>(initialCitizenFeedback);
-  const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, string>>({});
+  const [issues, setIssues] = useState<IssueReport[]>([]);
+  const [activityEvents, setActivityEvents] = useState<ReturnType<typeof listActivityByUser>>([]);
+  const [issueForm, setIssueForm] = useState({
+    title: "",
+    description: "",
+    location: "",
+    category: "Infrastructure",
+  });
+  const [issueEvidence, setIssueEvidence] = useState<string[]>([]);
+  const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
 
   const accountRole: Role = isAuthenticated ? (role === "politician" ? "politician" : "citizen") : targetRole ?? "citizen";
   const demoSession = accountRole === "politician" ? DEMO_POLITICIAN : DEMO_CITIZEN;
   const activeSession = session ?? demoSession;
+
+  useEffect(() => {
+    setIssues(listIssuesByWard(activeSession.ward));
+    setActivityEvents(listActivityByUser(activeSession.userId));
+  }, [activeSession.userId, activeSession.ward]);
 
   const politician = useMemo(() => {
     if (!activeSession || accountRole !== "politician") return null;
@@ -173,6 +155,10 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   }, [accountRole, politicians, activeSession]);
 
   const safeProjects = useMemo(() => (isProjectsError ? [] : projects), [isProjectsError, projects]);
+  const localPoliticians = useMemo(
+    () => politicians.filter((candidate) => candidate.ward === activeSession.ward),
+    [activeSession.ward, politicians],
+  );
   const allProjects = useMemo(() => [...createdProjects, ...safeProjects], [createdProjects, safeProjects]);
   const localProjects = useMemo(() => {
     if (!activeSession) return [];
@@ -180,9 +166,27 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     return allProjects.filter((project) => project.ward === activeSession.ward);
   }, [accountRole, politician, allProjects, activeSession]);
   const visibleProjects = localProjects.length > 0 ? localProjects.slice(0, 6) : allProjects.slice(0, 4);
-  const activityItems = accountRole === "politician" ? mockPoliticianActivity : mockCitizenActivity;
-  const answeredFeedback = citizenFeedback.filter((item) => item.status === "answered").length;
-  const pendingFeedback = citizenFeedback.filter((item) => item.status !== "answered").length;
+  const dynamicActivityItems: ActivityItem[] = activityEvents.map((event) => ({
+    type:
+      event.type === "verification"
+        ? "verification"
+        : event.type === "comment"
+          ? "comment"
+          : event.type === "project"
+            ? "update"
+            : "evidence",
+    author: event.userId === activeSession.userId ? "You" : activeSession.name,
+    content: event.summary,
+    date: event.createdAt,
+  }));
+  const activityItems =
+    dynamicActivityItems.length > 0
+      ? dynamicActivityItems
+      : accountRole === "politician"
+        ? mockPoliticianActivity
+        : fallbackCitizenActivity;
+  const answeredFeedback = issues.filter((issue) => issue.responses.some((entry) => entry.responderId === activeSession.userId)).length;
+  const pendingFeedback = issues.filter((issue) => issue.responses.length === 0).length;
 
   const publicPerformance = {
     publishedPromises: manifestoPromises.length,
@@ -228,6 +232,15 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     };
 
     setCreatedProjects((prev) => [project, ...prev]);
+    if (isAuthenticated) {
+      pushActivity({
+        userId: activeSession.userId,
+        userRole: accountRole,
+        type: "project",
+        summary: `Created project: ${project.title}`,
+      });
+      setActivityEvents(listActivityByUser(activeSession.userId));
+    }
     setShowProjectForm(false);
     setNewProject({ title: "", category: "Infrastructure", expectedCompletion: "" });
     setActiveTab("projects");
@@ -274,25 +287,80 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     );
 
     setProjectUpdateForm({ projectId: "", progress: "", note: "" });
+    if (isAuthenticated) {
+      pushActivity({
+        userId: activeSession.userId,
+        userRole: accountRole,
+        type: "project",
+        summary: `Published project progress update`,
+      });
+      setActivityEvents(listActivityByUser(activeSession.userId));
+    }
   };
 
-  const handleSubmitFeedbackResponse = (feedbackId: string) => {
-    const response = feedbackDrafts[feedbackId]?.trim();
-    if (!response) return;
+  const handleCreateIssue = () => {
+    if (!isAuthenticated || accountRole !== "citizen") return;
+    if (!issueForm.title.trim() || !issueForm.description.trim() || !issueForm.location.trim()) return;
 
-    setCitizenFeedback((prev) =>
-      prev.map((item) =>
-        item.id === feedbackId
-          ? {
-              ...item,
-              response,
-              status: "answered",
-            }
-          : item,
-      ),
-    );
+    createIssue({
+      title: issueForm.title,
+      description: issueForm.description,
+      location: issueForm.location,
+      category: issueForm.category,
+      ward: activeSession.ward,
+      municipality: activeSession.municipality,
+      authorId: activeSession.userId,
+      authorName: activeSession.name,
+      evidence: issueEvidence,
+    });
 
-    setFeedbackDrafts((prev) => ({ ...prev, [feedbackId]: "" }));
+    pushActivity({
+      userId: activeSession.userId,
+      userRole: "citizen",
+      type: "issue",
+      summary: `Reported issue: ${issueForm.title.trim()}`,
+    });
+
+    setIssueForm({ title: "", description: "", location: "", category: "Infrastructure" });
+    setIssueEvidence([]);
+    setIssues(listIssuesByWard(activeSession.ward));
+    setActivityEvents(listActivityByUser(activeSession.userId));
+  };
+
+  const handleIssueEvidence = (files: FileList | null) => {
+    if (!files) {
+      setIssueEvidence([]);
+      return;
+    }
+
+    setIssueEvidence(Array.from(files).map((file) => file.name));
+  };
+
+  const handleRespondIssue = (issueId: string) => {
+    const message = responseDrafts[issueId]?.trim();
+    if (!message || !isAuthenticated || accountRole !== "politician") return;
+
+    const issue = respondToIssue({
+      issueId,
+      responderId: activeSession.userId,
+      responderName: activeSession.name,
+      message,
+    });
+
+    if (!issue) {
+      return;
+    }
+
+    pushActivity({
+      userId: activeSession.userId,
+      userRole: "politician",
+      type: "response",
+      summary: `Responded to issue: ${issue.title}`,
+    });
+
+    setResponseDrafts((prev) => ({ ...prev, [issueId]: "" }));
+    setIssues(listIssuesByWard(activeSession.ward));
+    setActivityEvents(listActivityByUser(activeSession.userId));
   };
 
   const handleSignOut = async () => {
@@ -482,11 +550,25 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                     </>
                   )}
                   {accountRole === "citizen" && (
-                    <div className="surface-line pt-6">
+                    <div className="surface-line pt-6 space-y-3">
                       <h2 className="text-lg font-bold text-foreground mb-2">Citizen Account</h2>
                       <p className="text-sm text-muted-foreground">
                         You are verified for {activeSession.ward}. Use this page to follow local projects, upload evidence, and share status checks.
                       </p>
+                      <div className="border-t border-border pt-3">
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Local Politicians</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {localPoliticians.length > 0 ? (
+                            localPoliticians.map((candidate) => (
+                              <span key={candidate.id} className="border-b border-border pb-0.5 text-sm text-foreground">
+                                {candidate.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-muted-foreground">No local politicians matched your ward yet.</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
                   <div>
@@ -523,6 +605,52 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
 
               {activeTab === "projects" && (
                 <div className="space-y-4">
+                  {accountRole === "citizen" && (
+                    <div className="surface-line pt-4 space-y-3">
+                      <h3 className="text-base font-bold text-foreground">Report Local Issue</h3>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <input
+                          className="field-line"
+                          placeholder="Issue title (e.g., Broken drainage)"
+                          value={issueForm.title}
+                          onChange={(event) => setIssueForm((prev) => ({ ...prev, title: event.target.value }))}
+                        />
+                        <input
+                          className="field-line"
+                          placeholder="Location"
+                          value={issueForm.location}
+                          onChange={(event) => setIssueForm((prev) => ({ ...prev, location: event.target.value }))}
+                        />
+                      </div>
+                      <textarea
+                        className="field-line min-h-20"
+                        placeholder="Describe the issue"
+                        value={issueForm.description}
+                        onChange={(event) => setIssueForm((prev) => ({ ...prev, description: event.target.value }))}
+                      />
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <input
+                          className="field-line"
+                          placeholder="Category (Infrastructure, Utilities...)"
+                          value={issueForm.category}
+                          onChange={(event) => setIssueForm((prev) => ({ ...prev, category: event.target.value }))}
+                        />
+                        <label className="field-line flex items-center justify-between text-sm text-muted-foreground">
+                          <span>Attach photos/documents</span>
+                          <input type="file" multiple onChange={(event) => handleIssueEvidence(event.target.files)} className="max-w-[180px] text-xs" />
+                        </label>
+                      </div>
+                      {issueEvidence.length > 0 && (
+                        <p className="text-xs text-muted-foreground">Selected: {issueEvidence.join(", ")}</p>
+                      )}
+                      <div className="flex justify-end">
+                        <Button variant="civic" size="sm" className="rounded-none" onClick={handleCreateIssue} disabled={!isAuthenticated}>
+                          Submit Issue
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {accountRole === "politician" && (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
@@ -622,43 +750,74 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 <div className="space-y-4">
                   <ActivityFeed items={activityItems} />
 
+                  {accountRole === "citizen" && (
+                    <div className="surface-line pt-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-foreground">My Reported Issues</h3>
+                        <p className="text-xs text-muted-foreground">{issues.filter((issue) => issue.authorId === activeSession.userId).length} total</p>
+                      </div>
+                      {issues
+                        .filter((issue) => issue.authorId === activeSession.userId)
+                        .map((issue) => (
+                          <div key={issue.id} className="border-t border-border pt-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-foreground">{issue.title}</p>
+                              <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{issue.status}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">{issue.description}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{issue.location} · {new Date(issue.createdAt).toLocaleDateString()}</p>
+                            {issue.responses.length > 0 && (
+                              <div className="mt-2 border-l border-civic-green pl-3">
+                                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Latest response</p>
+                                <p className="text-sm text-foreground">{issue.responses[0].message}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      {issues.filter((issue) => issue.authorId === activeSession.userId).length === 0 && (
+                        <p className="text-sm text-muted-foreground">No reported issues yet. Use the Projects tab to file your first issue.</p>
+                      )}
+                    </div>
+                  )}
+
                   {accountRole === "politician" && (
                     <div className="surface-line pt-5 space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-foreground">Citizen Feedback Inbox</h3>
+                        <h3 className="font-bold text-foreground">Ward Issue Inbox</h3>
                         <p className="text-xs text-muted-foreground">{pendingFeedback} pending response</p>
                       </div>
-                      {citizenFeedback.map((item) => (
+                      {issues.map((item) => (
                         <div key={item.id} className="border-t border-border pt-3">
                           <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-semibold text-foreground">{item.author} · {item.projectTitle}</p>
+                            <p className="text-sm font-semibold text-foreground">{item.authorName} · {item.title}</p>
                             <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{item.status}</span>
                           </div>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.content}</p>
-                          <p className="mt-1 text-[11px] text-muted-foreground">{item.date}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">{item.location} · {new Date(item.createdAt).toLocaleDateString()}</p>
 
-                          {item.response ? (
-                            <p className="mt-2 border-l border-civic-green pl-3 text-sm text-foreground">Response: {item.response}</p>
+                          {item.responses.length > 0 ? (
+                            <p className="mt-2 border-l border-civic-green pl-3 text-sm text-foreground">Response: {item.responses[0].message}</p>
                           ) : (
                             <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                               <input
                                 className="field-line flex-1"
                                 placeholder="Write your response"
-                                value={feedbackDrafts[item.id] ?? ""}
+                                value={responseDrafts[item.id] ?? ""}
                                 onChange={(event) =>
-                                  setFeedbackDrafts((prev) => ({
+                                  setResponseDrafts((prev) => ({
                                     ...prev,
                                     [item.id]: event.target.value,
                                   }))
                                 }
                               />
-                              <Button variant="outline" size="sm" className="rounded-none" onClick={() => handleSubmitFeedbackResponse(item.id)}>
+                              <Button variant="outline" size="sm" className="rounded-none" onClick={() => handleRespondIssue(item.id)}>
                                 Respond
                               </Button>
                             </div>
                           )}
                         </div>
                       ))}
+                      {issues.length === 0 && <p className="text-sm text-muted-foreground">No ward issues reported yet.</p>}
                     </div>
                   )}
                 </div>

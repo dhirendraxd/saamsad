@@ -11,6 +11,7 @@ interface IdentityFormState {
   firstName: string;
   middleName: string;
   lastName: string;
+  ward: string;
   municipality: string;
 }
 
@@ -19,6 +20,7 @@ const emptyFormState: IdentityFormState = {
   firstName: "",
   middleName: "",
   lastName: "",
+  ward: "",
   municipality: "",
 };
 
@@ -62,7 +64,7 @@ const AuthPage = () => {
       const session = await signInWithIdentity({
         nationalId: formState.nationalId.trim(),
         name: fullName,
-        ward: "N/A",
+        ward: formState.ward.trim(),
         municipality: formState.municipality.trim(),
       });
       const dashboardRoute = session.role === "politician" ? "/dashboard/politician" : "/dashboard/citizen";
@@ -164,6 +166,20 @@ const AuthPage = () => {
                   autoCapitalize="characters"
                   spellCheck={false}
                   inputMode="text"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-gray-500 focus:ring-0"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-sm text-gray-700" htmlFor="ward">Ward</label>
+                <input
+                  id="ward"
+                  type="text"
+                  value={formState.ward}
+                  onChange={handleChange("ward")}
+                  placeholder="Ward 5"
+                  required
+                  autoComplete="address-level3"
                   className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-gray-500 focus:ring-0"
                 />
               </div>
