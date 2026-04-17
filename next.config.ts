@@ -34,6 +34,15 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
+  onDemandEntries: {
+    maxInactiveAge: 15 * 1000,
+    pagesBufferLength: 2,
+  },
+  turbopack: {
+    resolveAlias: {
+      "@/*": "./src/*",
+    },
+  },
   async headers() {
     return [
       {
