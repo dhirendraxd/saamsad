@@ -8,6 +8,12 @@ import {
   MapPin,
   Plus,
   User,
+  Search,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  TrendingUp,
+  X,
 } from "lucide-react";
 import ProjectCard from "@/components/ProjectCard";
 import ScoreDashboard from "@/components/ScoreDashboard";
@@ -110,6 +116,14 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [newProject, setNewProject] = useState({ title: "", category: "Infrastructure", expectedCompletion: "" });
   const [projectUpdateForm, setProjectUpdateForm] = useState({ projectId: "", progress: "", note: "" });
+
+  // Enhanced project filter & search state
+  const [projectSearchQuery, setProjectSearchQuery] = useState("");
+  const [projectStatusFilter, setProjectStatusFilter] = useState<"all" | "completed" | "in-progress" | "delayed" | "not-started">("all");
+  const [projectSortBy, setProjectSortBy] = useState<"title" | "progress" | "date">("title");
+  const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+  const [showVerificationConfirm, setShowVerificationConfirm] = useState(false);
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   const [issues, setIssues] = useState<IssueReport[]>([]);
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
@@ -218,26 +232,89 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
     [allProjects, localProjects],
   );
 
+  // Enhanced filtering and sorting
+  const filteredAndSortedProjects = useMemo(() => {
+    let filtered = visibleProjects;
+
+    // Apply status filter
+    if (projectStatusFilter !== "all") {
+      filtered = filtered.filter((p) => p.status === projectStatusFilter);
+    }
+
+    // Apply search
+    if (projectSearchQuery.trim()) {
+      const q = projectSearchQuery.toLowerCase();
+      filtered = filtered.filter((p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q),
+      );
+    }
+
+    // Apply sorting
+    const sorted = [...filtered];
+    switch (projectSortBy) {
+      case "progress":
+        sorted.sort((a, b) => b.progress - a.progress);
+        break;
+      case "date":
+        sorted.sort((a, b) => new Date(b.expectedCompletion).getTime() - new Date(a.expectedCompletion).getTime());
+        break;
+      default:
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    return sorted;
+  }, [visibleProjects, projectStatusFilter, projectSearchQuery, projectSortBy]);
+
+  // Helper: Get status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle className="h-4 w-4" />;
+      case "in-progress":
+        return <TrendingUp className="h-4 w-4" />;
+      case "delayed":
+        return <AlertCircle className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  // Helper: Get status colors
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "in-progress":
+        return "text-blue-600 bg-blue-50 border-blue-200";
+      case "delayed":
+        return "text-amber-600 bg-amber-50 border-amber-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
+    }
+  };
+
   useEffect(() => {
-    if (!selectedProjectId && visibleProjects.length > 0) {
-      setSelectedProjectId(visibleProjects[0].id);
+    if (!selectedProjectId && filteredAndSortedProjects.length > 0) {
+      setSelectedProjectId(filteredAndSortedProjects[0].id);
       return;
     }
 
-    if (selectedProjectId && !visibleProjects.some((project) => project.id === selectedProjectId)) {
-      setSelectedProjectId(visibleProjects[0]?.id ?? "");
+    if (selectedProjectId && !filteredAndSortedProjects.some((p) => p.id === selectedProjectId)) {
+      setSelectedProjectId(filteredAndSortedProjects[0]?.id ?? "");
     }
-  }, [selectedProjectId, visibleProjects]);
+  }, [selectedProjectId, filteredAndSortedProjects]);
 
   const selectedProject = useMemo(
-    () => visibleProjects.find((project) => project.id === selectedProjectId) ?? null,
-    [selectedProjectId, visibleProjects],
+    () => filteredAndSortedProjects.find((p) => p.id === selectedProjectId) ?? null,
+    [selectedProjectId, filteredAndSortedProjects],
   );
 
   const currentUserVerification = useMemo(() => {
     if (!selectedProjectId) return null;
     return listVerificationsByProject(selectedProjectId).find((item) => item.userId === activeSession.userId) ?? null;
-  }, [activeSession.userId, selectedProjectId, activityEvents]);
+  }, [activeSession.userId, selectedProjectId]);
 
   const activityItems: ActivityItem[] = useMemo(() => {
     const mapped = activityEvents.map((event) => ({
@@ -402,63 +479,80 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
 
   const handleSubmitVerification = () => {
     if (!isAuthenticated || accountRole !== "citizen" || !selectedProjectId) return;
-
-    upsertVerification({
-      projectId: selectedProjectId,
-      userId: activeSession.userId,
-      userName: activeSession.name,
-      ward: activeSession.ward,
-      vote: verificationVote,
-      note: verificationNote,
-      evidence: verificationEvidence,
-    });
-
-    pushActivity({
-      userId: activeSession.userId,
-      userRole: "citizen",
-      type: "verification",
-      summary: `Marked ${selectedProject?.title ?? "project"} as ${voteLabel[verificationVote]}`,
-    });
-
-    pushNotification({
-      userId: activeSession.userId,
-      title: "Verification submitted",
-      message: `You marked ${selectedProject?.title ?? "this project"} as ${voteLabel[verificationVote]}.`,
-    });
-
-    setVerificationNote("");
-    setVerificationEvidence([]);
-    refreshLocalData();
+    // Show confirmation first
+    setShowVerificationConfirm(true);
   };
 
-  const handleSubmitComment = () => {
+  const confirmSubmitVerification = async () => {
+    if (!selectedProjectId) return;
+    setVerificationSubmitting(true);
+    setShowVerificationConfirm(false);
+
+    try {
+      upsertVerification({
+        projectId: selectedProjectId,
+        userId: activeSession.userId,
+        userName: activeSession.name,
+        ward: activeSession.ward,
+        vote: verificationVote,
+        note: verificationNote,
+        evidence: verificationEvidence,
+      });
+
+      pushActivity({
+        userId: activeSession.userId,
+        userRole: "citizen",
+        type: "verification",
+        summary: `Marked ${selectedProject?.title ?? "project"} as ${voteLabel[verificationVote]}`,
+      });
+
+      pushNotification({
+        userId: activeSession.userId,
+        title: "✓ Verification submitted",
+        message: `You marked "${selectedProject?.title ?? "this project"}" as ${voteLabel[verificationVote]}.`,
+      });
+
+      setVerificationNote("");
+      setVerificationEvidence([]);
+      refreshLocalData();
+    } finally {
+      setVerificationSubmitting(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
     if (!isAuthenticated || accountRole !== "citizen" || !selectedProjectId || !commentDraft.trim()) return;
+    setCommentSubmitting(true);
 
-    addProjectComment({
-      projectId: selectedProjectId,
-      author: activeSession.name,
-      authorId: activeSession.userId,
-      ward: activeSession.ward,
-      content: commentDraft,
-      evidence: commentEvidence,
-    });
+    try {
+      addProjectComment({
+        projectId: selectedProjectId,
+        author: activeSession.name,
+        authorId: activeSession.userId,
+        ward: activeSession.ward,
+        content: commentDraft,
+        evidence: commentEvidence,
+      });
 
-    pushActivity({
-      userId: activeSession.userId,
-      userRole: "citizen",
-      type: "comment",
-      summary: `Commented on ${selectedProject?.title ?? "project"}`,
-    });
+      pushActivity({
+        userId: activeSession.userId,
+        userRole: "citizen",
+        type: "comment",
+        summary: `Commented on ${selectedProject?.title ?? "project"}`,
+      });
 
-    pushNotification({
-      userId: activeSession.userId,
-      title: "Comment posted",
-      message: `Your comment is visible on ${selectedProject?.title ?? "the project"}.`,
-    });
+      pushNotification({
+        userId: activeSession.userId,
+        title: "✓ Comment posted",
+        message: `Your comment is visible on "${selectedProject?.title ?? "the project"}".`,
+      });
 
-    setCommentDraft("");
-    setCommentEvidence([]);
-    refreshLocalData();
+      setCommentDraft("");
+      setCommentEvidence([]);
+      refreshLocalData();
+    } finally {
+      setCommentSubmitting(false);
+    }
   };
 
   const handleAddProject = () => {
@@ -918,9 +1012,10 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
                 <div className="space-y-4">
                   <div className="surface-line pt-5">
-                    <h2 className="text-base font-bold text-foreground">Projects in Kathmandu Constituency 5</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">Select a project to verify it or leave a comment. The list stays local to the constituency by default.</p>
+                    <h2 className="text-base font-bold text-foreground">Projects in {activeConstituency}</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">Track local projects, verify progress with evidence, and engage with your community.</p>
                   </div>
+
                   {isProjectsLoading || isProjectsFetching ? (
                     <div className="grid gap-4 sm:grid-cols-2">
                       {Array.from({ length: 4 }).map((_, idx) => (
@@ -929,16 +1024,120 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                     </div>
                   ) : isProjectsError ? (
                     <ErrorPanel message="Projects failed to load." onRetry={() => refetchProjects()} />
+                  ) : filteredAndSortedProjects.length === 0 && (projectSearchQuery || projectStatusFilter !== "all") ? (
+                    <div className="surface-line border-dashed border-accent/40 pt-8 text-center">
+                      <p className="text-sm font-semibold text-foreground">No projects match your filters</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Try adjusting your search or removing filters</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 rounded-none"
+                        onClick={() => {
+                          setProjectSearchQuery("");
+                          setProjectStatusFilter("all");
+                        }}
+                      >
+                        Clear filters
+                      </Button>
+                    </div>
+                  ) : filteredAndSortedProjects.length === 0 ? (
+                    <div className="surface-line border-dashed border-accent/40 pt-8 text-center">
+                      <p className="text-sm font-semibold text-foreground">No projects in your constituency yet</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Check back soon or explore other regions</p>
+                      <Link href="/explore">
+                        <Button variant="civic" size="sm" className="mt-3 rounded-none">
+                          Explore all projects
+                        </Button>
+                      </Link>
+                    </div>
                   ) : (
                     <>
-                      <select className="field-line mb-3 max-w-xl" value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)}>
-                        {visibleProjects.map((project) => (
-                          <option key={project.id} value={project.id}>{project.title}</option>
-                        ))}
-                      </select>
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        {visibleProjects.map((project) => (
-                          <ProjectCard key={project.id} project={project} disableNavigation onCardClick={handleDashboardProjectClick} />
+                      {/* Search & Filters */}
+                      <div className="space-y-3">
+                        {/* Search bar */}
+                        <div className="relative">
+                          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <input
+                            type="text"
+                            placeholder="Search projects by name, category..."
+                            className="field-line pl-10 w-full"
+                            value={projectSearchQuery}
+                            onChange={(e) => setProjectSearchQuery(e.target.value)}
+                          />
+                          {projectSearchQuery && (
+                            <button
+                              onClick={() => setProjectSearchQuery("")}
+                              className="absolute right-3 top-1/2 -translate-y-1/2"
+                              aria-label="Clear search"
+                            >
+                              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Status filter buttons */}
+                        <div className="flex flex-wrap gap-2">
+                          {(["all", "in-progress", "delayed", "completed", "not-started"] as const).map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => setProjectStatusFilter(status)}
+                              className={`text-xs font-medium px-3 py-1.5 rounded border transition-colors ${
+                                projectStatusFilter === status
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                              }`}
+                            >
+                              {status === "all" ? "All Projects" : status.charAt(0).toUpperCase() + status.slice(1).replace("-", " ")}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Sort dropdown */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Sort:</span>
+                          <select
+                            value={projectSortBy}
+                            onChange={(e) => setProjectSortBy(e.target.value as typeof projectSortBy)}
+                            className="field-line text-xs py-1"
+                          >
+                            <option value="title">Title (A-Z)</option>
+                            <option value="progress">Progress (High to Low)</option>
+                            <option value="date">Due Date (Newest)</option>
+                          </select>
+                          <span className="text-xs text-muted-foreground">{filteredAndSortedProjects.length} result{filteredAndSortedProjects.length !== 1 ? "s" : ""}</span>
+                        </div>
+                      </div>
+
+                      {/* Projects list as visual cards */}
+                      <div className="space-y-2">
+                        {filteredAndSortedProjects.map((project) => (
+                          <button
+                            key={project.id}
+                            onClick={() => setSelectedProjectId(project.id)}
+                            className={`w-full text-left border-2 transition-all p-3 rounded-none ${
+                              selectedProjectId === project.id ? "border-primary bg-primary/5" : "border-border hover:border-accent/40"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-sm text-foreground truncate">{project.title}</h4>
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs border ${getStatusColor(project.status)}`}>
+                                  {getStatusIcon(project.status)}
+                                  <span>{project.status.replace("-", " ")}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 mt-2 text-xs text-muted-foreground">
+                              <span>{project.category}</span>
+                              <span>{project.progress}% Complete</span>
+                            </div>
+                            <div className="mt-2 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-primary" style={{ width: `${project.progress}%` }} />
+                            </div>
+                          </button>
                         ))}
                       </div>
                     </>
@@ -946,48 +1145,140 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="surface-line pt-5 space-y-3">
-                    <h3 className="font-bold text-civic-green">Project Check-in</h3>
-                    <p className="text-sm text-muted-foreground">Use one simple form to verify progress and share a comment on the selected project.</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["completed", "in-progress", "delayed", "not-started"] as VerificationVote[]).map((vote) => (
-                        <button
-                          key={vote}
-                          type="button"
-                          className={`border px-2 py-2 text-xs font-semibold transition-colors ${verificationVote === vote ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:border-accent/40"}`}
-                          onClick={() => setVerificationVote(vote)}
-                        >
-                          {voteLabel[vote]}
-                        </button>
-                      ))}
-                    </div>
-                    <textarea className="field-line min-h-20" placeholder="Add a short verification note" value={verificationNote} onChange={(event) => setVerificationNote(event.target.value)} />
-                    <label className="flex items-center justify-between gap-3 border-b border-border py-2 text-sm text-muted-foreground">
-                      <span>Upload proof</span>
-                      <input type="file" multiple className="max-w-[160px] text-xs" onChange={(event) => handleVerificationEvidence(event.target.files)} />
-                    </label>
-                    {currentUserVerification && (
-                      <p className="text-xs text-muted-foreground">Latest vote: {voteLabel[currentUserVerification.vote]}</p>
-                    )}
-                    <div className="flex gap-2">
-                      <Button variant="civic" size="sm" className="flex-1 rounded-none" onClick={handleSubmitVerification} disabled={!isAuthenticated || !selectedProjectId}>
-                        Submit Verification
-                      </Button>
-                    </div>
-                  </div>
+                  {selectedProject && (
+                    <>
+                      {/* Project details preview */}
+                      <div className="surface-line pt-4 pb-3 space-y-2">
+                        <h4 className="font-semibold text-foreground">{selectedProject.title}</h4>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{selectedProject.category}</span>
+                          <span>{selectedProject.progress}% complete</span>
+                        </div>
+                        <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary" style={{ width: `${selectedProject.progress}%` }} />
+                        </div>
+                      </div>
 
-                  <div className="surface-line pt-5 space-y-3">
-                    <h3 className="font-bold text-twitter-blue">Project Comment</h3>
-                    <textarea className="field-line min-h-20" placeholder="Write a short project comment" value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} />
-                    <label className="flex items-center justify-between gap-3 border-b border-border py-2 text-sm text-muted-foreground">
-                      <span>Attach evidence</span>
-                      <input type="file" multiple className="max-w-[160px] text-xs" onChange={(event) => handleCommentEvidence(event.target.files)} />
-                    </label>
-                    <Button variant="outline" size="sm" className="w-full rounded-none" onClick={handleSubmitComment} disabled={!isAuthenticated || !selectedProjectId || !commentDraft.trim()}>
-                      Post Comment
-                    </Button>
-                  </div>
+                      {/* Verification form */}
+                      <div className="surface-line pt-4 space-y-3">
+                        <div>
+                          <h3 className="font-bold text-civic-green text-sm">Verify Progress</h3>
+                          <p className="text-xs text-muted-foreground mt-1">Share what you've observed about this project.</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {(["completed", "in-progress", "delayed", "not-started"] as VerificationVote[]).map((vote) => (
+                            <button
+                              key={vote}
+                              type="button"
+                              className={`border px-2 py-2 text-xs font-semibold transition-colors rounded ${verificationVote === vote ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:border-accent/40"}`}
+                              onClick={() => setVerificationVote(vote)}
+                            >
+                              {voteLabel[vote]}
+                            </button>
+                          ))}
+                        </div>
+
+                        <textarea
+                          className="field-line min-h-16 text-sm"
+                          placeholder="Add observations or notes (optional)"
+                          value={verificationNote}
+                          onChange={(e) => setVerificationNote(e.target.value)}
+                        />
+
+                        <label className="flex items-center justify-between gap-2 border-b border-border py-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
+                          <span>📎 Attach proof</span>
+                          <input type="file" multiple className="max-w-[120px] text-xs" onChange={(event) => handleVerificationEvidence(event.target.files)} />
+                        </label>
+
+                        {currentUserVerification && (
+                          <p className="text-xs text-muted-foreground bg-neutral-50 p-2 rounded border border-border">
+                            ✓ You voted: <strong>{voteLabel[currentUserVerification.vote]}</strong>
+                          </p>
+                        )}
+
+                        <Button
+                          variant="civic"
+                          size="sm"
+                          className="w-full rounded-none"
+                          onClick={handleSubmitVerification}
+                          disabled={!isAuthenticated || !selectedProjectId || verificationSubmitting}
+                        >
+                          {verificationSubmitting ? "Submitting..." : "Submit Verification"}
+                        </Button>
+                      </div>
+
+                      {/* Comment form */}
+                      <div className="surface-line pt-4 space-y-3">
+                        <div>
+                          <h3 className="font-bold text-twitter-blue text-sm">Leave a Comment</h3>
+                          <p className="text-xs text-muted-foreground mt-1">Share updates or ask questions.</p>
+                        </div>
+
+                        <textarea
+                          className="field-line min-h-16 text-sm"
+                          placeholder="Write your comment here..."
+                          value={commentDraft}
+                          onChange={(e) => setCommentDraft(e.target.value)}
+                        />
+
+                        <label className="flex items-center justify-between gap-2 border-b border-border py-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
+                          <span>📎 Attach evidence</span>
+                          <input type="file" multiple className="max-w-[120px] text-xs" onChange={(event) => handleCommentEvidence(event.target.files)} />
+                        </label>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full rounded-none"
+                          onClick={handleSubmitComment}
+                          disabled={!isAuthenticated || !selectedProjectId || !commentDraft.trim() || commentSubmitting}
+                        >
+                          {commentSubmitting ? "Posting..." : "Post Comment"}
+                        </Button>
+                      </div>
+                    </>
+                  ) || (
+                    <div className="surface-line pt-8 pb-8 text-center border-dashed border-accent/40">
+                      <p className="text-sm text-muted-foreground">Select a project to get started</p>
+                    </div>
+                  )}
                 </div>
+
+                {/* Verification confirmation dialog */}
+                {showVerificationConfirm && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="surface-line max-w-sm w-full p-6 space-y-4">
+                      <div>
+                        <h3 className="font-bold text-foreground">Confirm your verification</h3>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          You're marking "{selectedProject?.title}" as <strong>{voteLabel[verificationVote]}</strong>.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 rounded-none"
+                          onClick={() => setShowVerificationConfirm(false)}
+                          disabled={verificationSubmitting}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="civic"
+                          size="sm"
+                          className="flex-1 rounded-none"
+                          onClick={confirmSubmitVerification}
+                          disabled={verificationSubmitting}
+                        >
+                          {verificationSubmitting ? "Confirming..." : "Confirm"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
