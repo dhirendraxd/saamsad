@@ -1011,9 +1011,9 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
             {accountRole === "citizen" && (
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
                 <div className="space-y-4">
-                  <div className="surface-line pt-5">
-                    <h2 className="text-base font-bold text-foreground">Projects in {activeConstituency}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">Track local projects, verify progress with evidence, and engage with your community.</p>
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-bold text-foreground">Projects</h2>
+                    <p className="text-base text-muted-foreground">Review and verify progress in {activeConstituency}</p>
                   </div>
 
                   {isProjectsLoading || isProjectsFetching ? (
@@ -1052,59 +1052,70 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                     </div>
                   ) : (
                     <>
-                      {/* Search & Filters */}
-                      <div className="space-y-3">
+                      {/* Search & Filters - Clean Layout */}
+                      <div className="space-y-4">
                         {/* Search bar */}
-                        <div className="relative">
-                          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <input
-                            type="text"
-                            placeholder="Search projects by name, category..."
-                            className="field-line pl-10 w-full"
-                            value={projectSearchQuery}
-                            onChange={(e) => setProjectSearchQuery(e.target.value)}
-                          />
-                          {projectSearchQuery && (
-                            <button
-                              onClick={() => setProjectSearchQuery("")}
-                              className="absolute right-3 top-1/2 -translate-y-1/2"
-                              aria-label="Clear search"
-                            >
-                              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          )}
+                        <div>
+                          <label htmlFor="project-search" className="text-sm font-semibold text-foreground block mb-2">
+                            Search
+                          </label>
+                          <div className="relative">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <input
+                              id="project-search"
+                              type="text"
+                              placeholder="Search by name or category..."
+                              className="field-line pl-10 w-full text-base"
+                              value={projectSearchQuery}
+                              onChange={(e) => setProjectSearchQuery(e.target.value)}
+                            />
+                            {projectSearchQuery && (
+                              <button
+                                onClick={() => setProjectSearchQuery("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label="Clear search"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Status filter buttons */}
-                        <div className="flex flex-wrap gap-2">
-                          {(["all", "in-progress", "delayed", "completed", "not-started"] as const).map((status) => (
-                            <button
-                              key={status}
-                              onClick={() => setProjectStatusFilter(status)}
-                              className={`text-xs font-medium px-3 py-1.5 rounded border transition-colors ${
-                                projectStatusFilter === status
-                                  ? "border-primary bg-primary/10 text-primary"
-                                  : "border-border text-muted-foreground hover:border-accent/40 hover:text-foreground"
-                              }`}
-                            >
-                              {status === "all" ? "All Projects" : status.charAt(0).toUpperCase() + status.slice(1).replace("-", " ")}
-                            </button>
-                          ))}
+                        {/* Status filters */}
+                        <div>
+                          <label className="text-sm font-semibold text-foreground block mb-3">Status</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {(["all", "in-progress", "delayed", "completed", "not-started"] as const).map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => setProjectStatusFilter(status)}
+                                className={`text-sm font-medium px-4 py-2 rounded border transition-all ${
+                                  projectStatusFilter === status
+                                    ? "border-civic-green bg-civic-green/10 text-civic-green"
+                                    : "border-border text-foreground hover:border-civic-green/50"
+                                }`}
+                              >
+                                {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1).replace("-", " ")}
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
-                        {/* Sort dropdown */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Sort:</span>
+                        {/* Sort */}
+                        <div>
+                          <label htmlFor="sort-select" className="text-sm font-semibold text-foreground block mb-2">
+                            Sort
+                          </label>
                           <select
+                            id="sort-select"
                             value={projectSortBy}
                             onChange={(e) => setProjectSortBy(e.target.value as typeof projectSortBy)}
-                            className="field-line text-xs py-1"
+                            className="field-line text-base py-2 w-full"
                           >
-                            <option value="title">Title (A-Z)</option>
+                            <option value="title">Name (A-Z)</option>
                             <option value="progress">Progress (High to Low)</option>
-                            <option value="date">Due Date (Newest)</option>
+                            <option value="date">Newest First</option>
                           </select>
-                          <span className="text-xs text-muted-foreground">{filteredAndSortedProjects.length} result{filteredAndSortedProjects.length !== 1 ? "s" : ""}</span>
                         </div>
                       </div>
 
@@ -1114,28 +1125,28 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                           <button
                             key={project.id}
                             onClick={() => setSelectedProjectId(project.id)}
-                            className={`w-full text-left border-2 transition-all p-3 rounded-none ${
-                              selectedProjectId === project.id ? "border-primary bg-primary/5" : "border-border hover:border-accent/40"
+                            className={`w-full text-left border transition-all p-4 rounded-lg cursor-pointer ${
+                              selectedProjectId === project.id
+                                ? "border-civic-green bg-civic-green/8"
+                                : "border-border hover:border-civic-green/50"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm text-foreground truncate">{project.title}</h4>
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
+                                <h4 className="font-semibold text-base text-foreground">{project.title}</h4>
+                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
                               </div>
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs border ${getStatusColor(project.status)}`}>
-                                  {getStatusIcon(project.status)}
-                                  <span>{project.status.replace("-", " ")}</span>
-                                </div>
+                              <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border ${getStatusColor(project.status)} flex-shrink-0`}>
+                                {getStatusIcon(project.status)}
+                                <span className="hidden sm:inline">{project.status.replace("-", " ")}</span>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between gap-2 mt-2 text-xs text-muted-foreground">
-                              <span>{project.category}</span>
-                              <span>{project.progress}% Complete</span>
+                            <div className="flex items-center justify-between gap-2 mt-3 text-sm">
+                              <span className="text-muted-foreground">{project.category}</span>
+                              <span className="text-foreground font-medium">{project.progress}%</span>
                             </div>
-                            <div className="mt-2 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
-                              <div className="h-full bg-primary" style={{ width: `${project.progress}%` }} />
+                            <div className="mt-2 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-civic-green" style={{ width: `${project.progress}%` }} />
                             </div>
                           </button>
                         ))}
@@ -1160,47 +1171,64 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                       </div>
 
                       {/* Verification form */}
-                      <div className="surface-line pt-4 space-y-3">
+                      <div className="surface-line pt-4 space-y-4">
                         <div>
-                          <h3 className="font-bold text-civic-green text-sm">Verify Progress</h3>
-                          <p className="text-xs text-muted-foreground mt-1">Share what you've observed about this project.</p>
+                          <h3 className="font-bold text-base text-foreground">Verify Progress</h3>
+                          <p className="text-sm text-muted-foreground mt-1">Share what you've observed</p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          {(["completed", "in-progress", "delayed", "not-started"] as VerificationVote[]).map((vote) => (
-                            <button
-                              key={vote}
-                              type="button"
-                              className={`border px-2 py-2 text-xs font-semibold transition-colors rounded ${verificationVote === vote ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:border-accent/40"}`}
-                              onClick={() => setVerificationVote(vote)}
-                            >
-                              {voteLabel[vote]}
-                            </button>
-                          ))}
+                        <div>
+                          <label className="text-sm font-semibold text-foreground block mb-3">
+                            Project Status
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(["completed", "in-progress", "delayed", "not-started"] as VerificationVote[]).map((vote) => (
+                              <button
+                                key={vote}
+                                type="button"
+                                className={`border px-4 py-2 text-sm font-medium transition-all rounded ${
+                                  verificationVote === vote
+                                    ? "border-civic-green bg-civic-green/10 text-civic-green"
+                                    : "border-border text-foreground hover:border-civic-green/50"
+                                }`}
+                                onClick={() => setVerificationVote(vote)}
+                              >
+                                {voteLabel[vote]}
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
-                        <textarea
-                          className="field-line min-h-16 text-sm"
-                          placeholder="Add observations or notes (optional)"
-                          value={verificationNote}
-                          onChange={(e) => setVerificationNote(e.target.value)}
-                        />
+                        <div>
+                          <label htmlFor="verification-notes" className="text-sm font-semibold text-foreground block mb-2">
+                            Notes <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                          </label>
+                          <textarea
+                            id="verification-notes"
+                            className="field-line min-h-24 text-base resize-none"
+                            placeholder="What have you observed about this project?"
+                            value={verificationNote}
+                            onChange={(e) => setVerificationNote(e.target.value)}
+                          />
+                        </div>
 
-                        <label className="flex items-center justify-between gap-2 border-b border-border py-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
-                          <span>📎 Attach proof</span>
-                          <input type="file" multiple className="max-w-[120px] text-xs" onChange={(event) => handleVerificationEvidence(event.target.files)} />
+                        <label className="border border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-civic-green/50 transition-colors">
+                          <span className="text-sm font-semibold text-foreground block">Add photos or documents</span>
+                          <input type="file" multiple className="hidden" onChange={(event) => handleVerificationEvidence(event.target.files)} />
+                          <p className="text-xs text-muted-foreground mt-2">Optional • PNG, JPG, PDF up to 5MB each</p>
                         </label>
 
                         {currentUserVerification && (
-                          <p className="text-xs text-muted-foreground bg-neutral-50 p-2 rounded border border-border">
-                            ✓ You voted: <strong>{voteLabel[currentUserVerification.vote]}</strong>
-                          </p>
+                          <div className="bg-civic-green/5 border border-civic-green/30 rounded-lg p-3">
+                            <p className="text-sm font-semibold text-civic-green">
+                              Already verified: {voteLabel[currentUserVerification.vote]}
+                            </p>
+                          </div>
                         )}
 
                         <Button
                           variant="civic"
-                          size="sm"
-                          className="w-full rounded-none"
+                          className="w-full"
                           onClick={handleSubmitVerification}
                           disabled={!isAuthenticated || !selectedProjectId || verificationSubmitting}
                         >
@@ -1209,28 +1237,28 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                       </div>
 
                       {/* Comment form */}
-                      <div className="surface-line pt-4 space-y-3">
+                      <div className="surface-line pt-4 space-y-4">
                         <div>
-                          <h3 className="font-bold text-twitter-blue text-sm">Leave a Comment</h3>
-                          <p className="text-xs text-muted-foreground mt-1">Share updates or ask questions.</p>
+                          <h3 className="font-bold text-base text-foreground">Add Comment</h3>
+                          <p className="text-sm text-muted-foreground mt-1">Share updates or ask questions</p>
                         </div>
 
                         <textarea
-                          className="field-line min-h-16 text-sm"
-                          placeholder="Write your comment here..."
+                          className="field-line min-h-24 text-base resize-none"
+                          placeholder="What would you like to share?"
                           value={commentDraft}
                           onChange={(e) => setCommentDraft(e.target.value)}
                         />
 
-                        <label className="flex items-center justify-between gap-2 border-b border-border py-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
-                          <span>📎 Attach evidence</span>
-                          <input type="file" multiple className="max-w-[120px] text-xs" onChange={(event) => handleCommentEvidence(event.target.files)} />
+                        <label className="border border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-civic-green/50 transition-colors">
+                          <span className="text-sm font-semibold text-foreground block">Add photos or documents</span>
+                          <input type="file" multiple className="hidden" onChange={(event) => handleCommentEvidence(event.target.files)} />
+                          <p className="text-xs text-muted-foreground mt-2">Optional • PNG, JPG, PDF up to 5MB each</p>
                         </label>
 
                         <Button
                           variant="outline"
-                          size="sm"
-                          className="w-full rounded-none"
+                          className="w-full"
                           onClick={handleSubmitComment}
                           disabled={!isAuthenticated || !selectedProjectId || !commentDraft.trim() || commentSubmitting}
                         >
@@ -1239,8 +1267,9 @@ const AccountHub = ({ targetRole }: { targetRole?: Role }) => {
                       </div>
                     </>
                   ) || (
-                    <div className="surface-line pt-8 pb-8 text-center border-dashed border-accent/40">
-                      <p className="text-sm text-muted-foreground">Select a project to get started</p>
+                    <div className="surface-line pt-16 pb-16 text-center">
+                      <p className="text-2xl font-bold text-foreground">Select a project</p>
+                      <p className="text-muted-foreground mt-2">Choose from the list to get started</p>
                     </div>
                   )}
                 </div>
